@@ -1,0 +1,829 @@
+/* Reset et base */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+    background: #f8f9fa;
+    color: #2c3e50;
+    line-height: 1.4;
+}
+
+.container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 3px;
+}
+
+/* Header principal */
+.header {
+    background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+    color: white;
+    padding: 10px;
+    border-radius: 10px;
+    margin-bottom: 6px;
+    text-align: center;
+}
+
+.logo-omnidesk-main {
+    font-size: 42px;
+    font-weight: bold;
+    color: white;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    margin-bottom: 0;
+}
+
+.slogan {
+    font-size: 13px;
+    opacity: 0.9;
+    margin-top: -2px;
+    margin-bottom: 3px;
+}
+
+.slogan .ai {
+    font-weight: bold;
+    color: #3B82F6;
+}
+
+.header-subtitle {
+    font-size: 14px;
+    font-weight: 500;
+    opacity: 0.95;
+    margin-bottom: 2px;
+}
+
+.header-subtitle-main {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 2px;
+}
+
+.header-subtitle-channels {
+    font-size: 14px;
+    font-weight: 500;
+    opacity: 0.9;
+}
+
+.pilot-badge {
+    display: inline-block;
+    background: #e74c3c;
+    padding: 4px 12px;
+    border-radius: 15px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+/* Section générale */
+.section {
+    background: white;
+    border-radius: 8px;
+    padding: 6px;
+    margin-bottom: 5px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    position: relative;
+}
+
+/* Logo j-AIme en coin */
+.jaime-corner {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #f8f9fa;
+    padding: 5px 10px;
+    border-radius: 5px;
+    text-decoration: none;
+    transition: background 0.3s;
+    font-size: 13px;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.jaime-corner:hover {
+    background: #e8f6ff;
+}
+
+.jaime-corner .ai {
+    color: #3B82F6;
+}
+
+h2 {
+    font-size: 18px;
+    color: #2c3e50;
+    margin-bottom: 4px;
+    border-bottom: 2px solid #3498db;
+    padding-bottom: 2px;
+}
+
+/* Calculateur ROI ultra compact */
+.roi-calculator {
+    background: #ecf8ff;
+    border: 1px solid #b3e0ff;
+    padding: 5px;
+    border-radius: 6px;
+    margin-bottom: 4px;
+}
+
+.calculator-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 5px;
+    margin-bottom: 4px;
+}
+
+.calculator-grid.three-cols {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.input-group label {
+    font-size: 11px;
+    color: #5a6c7d;
+    margin-bottom: 1px;
+    font-weight: 500;
+}
+
+.input-group input {
+    padding: 3px 6px;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    font-size: 13px;
+    transition: border-color 0.3s;
+    color: #95a5a6;
+    height: 28px;
+    box-sizing: border-box;
+}
+
+.input-group input:focus {
+    outline: none;
+    border-color: #3498db;
+    color: #2c3e50;
+}
+
+.input-helper {
+    font-size: 9px;
+    color: #95a5a6;
+    margin-top: 1px;
+}
+
+/* Résultats ROI */
+.roi-results {
+    background: white;
+    padding: 5px;
+    border-radius: 6px;
+    border: 2px solid #27ae60;
+    transition: opacity 0.3s ease;
+}
+
+.results-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    text-align: center;
+}
+
+.result-item {
+    padding: 8px;
+    background: #f8f9fa;
+    border-radius: 4px;
+}
+
+.result-label {
+    font-size: 10px;
+    color: #7f8c8d;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+}
+
+.result-value {
+    font-size: 18px;
+    font-weight: 600;
+    color: #27ae60;
+}
+
+.result-value.highlight {
+    color: #e74c3c;
+    font-size: 20px;
+}
+
+.result-value.plan {
+    color: #3498db;
+    font-size: 14px;
+}
+
+/* Questionnaire priorités ultra compact */
+.priorities-quiz {
+    background: #f8f9fa;
+    padding: 8px;
+    border-radius: 6px;
+    margin-bottom: 6px;
+}
+
+.quiz-question {
+    margin-bottom: 8px;
+}
+
+.quiz-question:last-child {
+    margin-bottom: 0;
+}
+
+.question-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 3px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.question-number {
+    background: #3498db;
+    color: white;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 600;
+}
+
+.checkbox-group {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding-left: 24px;
+}
+
+.checkbox-item {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    transition: background 0.3s;
+    padding: 4px;
+    border-radius: 3px;
+}
+
+.checkbox-item:hover {
+    background: #e8f6ff;
+}
+
+.checkbox-item input[type="checkbox"] {
+    margin-right: 4px;
+    width: 12px;
+    height: 12px;
+    cursor: pointer;
+}
+
+.checkbox-label {
+    font-size: 12px;
+    color: #34495e;
+}
+
+/* Offre Programme Pilote compact */
+.pilot-offer {
+    background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+    border: 2px solid #27ae60;
+    padding: 5px;
+    border-radius: 8px;
+    position: relative;
+}
+
+.offer-header {
+    text-align: center;
+    margin-bottom: 4px;
+}
+
+.offer-title {
+    font-size: 16px;
+    color: #27ae60;
+    font-weight: 600;
+    margin-bottom: 2px;
+}
+
+.offer-deadline {
+    color: #e74c3c;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+.offer-features {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.feature-card {
+    background: white;
+    padding: 6px;
+    border-radius: 6px;
+    text-align: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.feature-icon {
+    font-size: 24px;
+    margin-bottom: 4px;
+}
+
+.feature-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 2px;
+}
+
+.feature-desc {
+    font-size: 11px;
+    color: #7f8c8d;
+    line-height: 1.2;
+}
+
+/* CTA compact */
+.cta-container {
+    text-align: center;
+    margin: 5px 0;
+}
+
+.cta-button {
+    display: inline-block;
+    background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+    color: white;
+    padding: 10px 30px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 18px;
+    font-weight: 600;
+    box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+    transition: all 0.3s;
+}
+
+.cta-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 5px 20px rgba(39, 174, 96, 0.4);
+}
+
+.cta-subtitle {
+    font-size: 12px;
+    color: #7f8c8d;
+    margin-top: 5px;
+}
+
+.cta-subtitle .highlight {
+    color: #27ae60;
+    font-weight: 600;
+}
+
+/* Info boxes compact */
+.info-box {
+    background: #fff3e0;
+    border-left: 3px solid #ff9800;
+    padding: 6px;
+    border-radius: 3px;
+    margin: 6px 0;
+}
+
+.info-box-title {
+    font-weight: 600;
+    color: #e65100;
+    margin-bottom: 2px;
+    font-size: 12px;
+}
+
+ 
+.info-box-text {
+    font-size: 11px;
+    color: #5a6c7d;
+    line-height: 1.3;
+}
+
+/* Places restantes compact */
+.availability-bar {
+    background: white;
+    padding: 6px;
+    border-radius: 6px;
+    border: 1px solid #e0e0e0;
+    margin: 6px 0;
+}
+
+.availability-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 3px;
+}
+
+.availability-text {
+    font-size: 12px;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.availability-count {
+    color: #e74c3c;
+    font-weight: 700;
+}
+
+.progress-bar {
+    height: 5px;
+    background: #e0e0e0;
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(to right, #e74c3c, #ff6b6b);
+    width: 53%;
+    transition: width 1s ease;
+}
+
+/* Intégration Brevo - Styles personnalisés */
+.brevo-form-wrapper {
+    background: white;
+    padding: 5px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+/* Forcer la police système sur tous les éléments Brevo */
+.sib-form *,
+.sib-form-container *,
+#sib-container *,
+#sib-form * {
+    font-family: -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif !important;
+}
+
+/* Container principal Brevo */
+.sib-container--large {
+    max-width: 100% !important;
+    border: none !important;
+    border-radius: 0 !important;
+    background-color: transparent !important;
+    padding: 0 !important;
+}
+
+#sib-form {
+    background: transparent !important;
+}
+
+/* Titres des sections */
+.sib-form-block p {
+    font-family: -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif !important;
+    color: #2c3e50 !important;
+    font-weight: 600 !important;
+    margin-bottom: 10px !important;
+}
+
+/* Questionnaire priorities styling */
+.sib-form-block[style*="font-size:18px"] {
+    font-size: 18px !important;
+    color: #2c3e50 !important;
+    border-bottom: 2px solid #3498db;
+    padding-bottom: 5px;
+    margin-bottom: 10px !important;
+}
+
+/* Section dividers */
+.sib-divider-form-block div {
+    border-color: #e0e0e0 !important;
+    margin: 20px 0 !important;
+}
+
+/* Labels des champs */
+.entry__label {
+    color: #5a6c7d !important;
+    font-size: 14Spx !important;
+    margin-bottom: 5px !important;
+    font-weight: 500 !important;
+    font-family: -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif !important;
+}
+
+/* Champs de saisie */
+.sib-input input,
+.sib-select select {
+    padding: 2px 4px !important;
+    border: 1px solid #d1d5db !important;
+    border-radius: 4px !important;
+    font-size: 12px !important;
+    width: 100% !important;
+    font-family: -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif !important;
+    color: #2c3e50 !important;
+    transition: border-color 0.3s !important;
+    height: 26px !important;
+    box-sizing: border-box !important;
+}
+
+.sib-input input:focus,
+.sib-select select:focus {
+    outline: none !important;
+    border-color: #3498db !important;
+}
+
+/* Radio buttons styling */
+.sib-radiobutton-group .entry__choice {
+    margin-bottom: 6px !important;
+    padding: 5px !important;
+    border-radius: 6px !important;
+    transition: background 0.3s !important;
+    border: 1px solid transparent !important;
+}
+
+.sib-radiobutton-group .entry__choice:hover {
+    background: #e8f6ff !important;
+    border-color: #d1d5db !important;
+}
+/* Espacement entre le radio button et le label */
+.sib-radiobutton-group input[type="radio"] {
+    margin-right: 12px !important;
+}
+
+/* Ajustement du conteneur du label */
+.sib-radiobutton-group .entry__choice label {
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;  /* Ajoute un espacement uniforme entre les éléments */
+}
+
+
+/* Radio button custom styling */
+.radio-button {
+    width: 16px !important;
+    height: 16px !important;
+    flex-shrink: 0 !important;
+    border: 2px solid #d1d5db !important;
+    border-radius: 50% !important;
+    margin-right: 12px !important;  /* Augmentez cette valeur de 8px à 12px */
+    position: relative !important;
+    background: white !important;
+}
+
+/* Ajoutez aussi cette règle pour l'espacement du texte */
+.sib-radiobutton-group .entry__choice span:not(.radio-button) {
+    margin-left: 8px !important;  /* Ajoutez un margin-left supplémentaire */
+    line-height: 1.5 !important;
+    display: inline-block !important;
+    vertical-align: middle !important;
+    font-size: 14px !important;
+    color: #2c3e50 !important;
+}
+input[type="radio"]:checked + .radio-button {
+    border-color: #3498db !important;
+    background: #3498db !important;
+}
+
+input[type="radio"]:checked + .radio-button::after {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    width: 6px !important;
+    height: 6px !important;
+    background: white !important;
+    border-radius: 50% !important;
+}
+
+/* Titre principal du formulaire */
+.sib-form-block[style*="font-size:32px"] p {
+    font-size: 24px !important;
+    color: #2c3e50 !important;
+    font-weight: 600 !important;
+    text-align: center !important;
+    margin: 20px 0 !important;
+}
+
+.sib-form-block[style*="text-align:center"][style*="font-size:16px"] p {
+    font-size: 18px !important;
+    color: #7f8c8d !important;
+    text-align: center !important;
+    margin-bottom: 20px !important;
+}
+
+/* Bouton de soumission */
+.sib-form-block__button {
+    background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%) !important;
+    border-radius: 6px !important;
+    padding: 6px 15px !important;
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    width: 90% !important;
+    transition: all 0.3s !important;
+    border: none !important;
+    cursor: pointer !important;
+    box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3) !important;
+    color: white !important;
+    font-family: -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif !important;
+}
+
+.sib-form-block__button:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 5px 20px rgba(39, 174, 96, 0.4) !important;
+}
+
+/* Messages d'erreur */
+.entry__error {
+    font-size: 11px !important;
+    font-family: -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif !important;
+    margin-top: 5px !important;
+    padding: 5px 8px !important;
+}
+
+/* Messages de validation */
+.sib-form-message-panel {
+    margin: 8px 0 !important;
+    padding: 6px !important;
+    border-radius: 6px !important;
+    font-family: -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif !important;
+}
+
+/* Espacement des sections */
+.sib-form-block {
+    margin-bottom: 3px !important;
+}
+
+.sib-form div[style*="padding: 8px 0"] {
+    padding: 4px 0 !important;
+}
+
+/* Adaptation responsive */
+@media (max-width: 768px) {
+    .brevo-form-wrapper {
+        padding: 5px;
+    }
+
+    .sib-form-block[style*="font-size:32px"] p {
+        font-size: 20px !important;
+    }
+}
+
+/* Footer compact */
+.footer {
+    text-align: center;
+    padding: 4px;
+    color: #95a5a6;
+    font-size: 10px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .calculator-grid,
+    .results-grid,
+    .offer-features {
+        grid-template-columns: 1fr;
+    }
+
+    .section {
+        padding: 8px;
+    }
+}
+
+/* Bouton calculer compact */
+.calculate-button {
+    background: #3498db;
+    color: white;
+    padding: 4px 16px;
+    border: none;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    width: 100%;
+    height: 28px;
+    box-sizing: border-box;
+}
+
+.calculate-button:hover {
+    background: #2980b9;
+    transform: translateY(-1px);
+}
+
+/* Styles Brevo intégrés */
+@font-face {
+    font-display: block;
+    font-family: Roboto;
+    src: url(https://assets.brevo.com/font/Roboto/Latin/normal/normal/7529907e9eaf8ebb5220c5f9850e3811.woff2) format("woff2"), url(https://assets.brevo.com/font/Roboto/Latin/normal/normal/25c678feafdc175a70922a116c9be3e7.woff) format("woff")
+}
+
+@font-face {
+    font-display: fallback;
+    font-family: Roboto;
+    font-weight: 600;
+    src: url(https://assets.brevo.com/font/Roboto/Latin/medium/normal/6e9caeeafb1f3491be3e32744bc30440.woff2) format("woff2"), url(https://assets.brevo.com/font/Roboto/Latin/medium/normal/71501f0d8d5aa95960f6475d5487d4c2.woff) format("woff")
+}
+
+@font-face {
+    font-display: fallback;
+    font-family: Roboto;
+    font-weight: 700;
+    src: url(https://assets.brevo.com/font/Roboto/Latin/bold/normal/3ef7cf158f310cf752d5ad08cd0e7e60.woff2) format("woff2"), url(https://assets.brevo.com/font/Roboto/Latin/bold/normal/ece3a1d82f18b60bcce0211725c476aa.woff) format("woff")
+}
+
+#sib-container input:-ms-input-placeholder {
+    text-align: left;
+    font-family: Helvetica, sans-serif;
+    color: #c0ccda;
+}
+
+#sib-container input::placeholder {
+    text-align: left;
+    font-family: Helvetica, sans-serif;
+    color: #c0ccda;
+}
+
+#sib-container textarea::placeholder {
+    text-align: left;
+    font-family: Helvetica, sans-serif;
+    color: #c0ccda;
+}
+
+#sib-container a {
+    text-decoration: underline;
+    color: #2BB2FC;
+}
+
+/* Styles pour l'autocomplétion des villes */
+.sib-input select,
+.sib-select select {
+    padding: 2px 4px !important;
+    border: 1px solid #d1d5db !important;
+    border-radius: 4px !important;
+    font-size: 12px !important;
+    width: 100% !important;
+    font-family: -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif !important;
+    color: #2c3e50 !important;
+    transition: border-color 0.3s !important;
+    background: white !important;
+    cursor: pointer !important;
+    height: 26px !important;
+    box-sizing: border-box !important;
+}
+
+.sib-input select:focus,
+.sib-select select:focus {
+    outline: none !important;
+    border-color: #3498db !important;
+}
+
+/* État de chargement pour les champs ville */
+.sib-input input[disabled],
+.sib-select select[disabled] {
+    background-color: #f8f9fa !important;
+    cursor: not-allowed !important;
+    opacity: 0.7 !important;
+}
+
+/* Animation de transition pour les changements de champ */
+.sib-input input,
+.sib-input select {
+    transition: opacity 0.3s ease, background-color 0.3s ease !important;
+}
+
+/* Style pour le select des villes multiples */
+#VILLE select option {
+    padding: 5px !important;
+    font-size: 13px !important;
+    font-family: -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif !important;
+}
+
+#VILLE select option:first-child {
+    color: #7f8c8d !important;
+    font-style: italic !important;
+}
+
+/* Indicateur de chargement plus subtil */
+.loading-postal {
+    position: relative !important;
+}
+
+.loading-postal::after {
+    content: '' !important;
+    position: absolute !important;
+    right: 10px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    width: 12px !important;
+    height: 12px !important;
+    border: 2px solid #d1d5db !important;
+    border-radius: 50% !important;
+    border-top-color: #3498db !important;
+    animation: spin 1s linear infinite !important;
+}
+
+@keyframes spin {
+    0% { transform: translateY(-50%) rotate(0deg) !important; }
+    100% { transform: translateY(-50%) rotate(360deg) !important; }
+}

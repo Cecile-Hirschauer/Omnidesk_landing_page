@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OmniDesk - Programme Pilote Hôtelier</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://sibforms.com/forms/end-form/build/sib-styles.css">
+
+    <!-- Brevo Tracking Script -->
+    <script src="https://cdn.brevo.com/js/sdk-loader.js" async></script>
+    <script>
+        window.Brevo = window.Brevo || [];
+        Brevo.push([
+            "init",
+            {
+                client_key: "cfqb94kpfbv0h3hu1iadm78e"
+            }
+        ]);
+    </script>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Header principal -->
+        <div class="header">
+            <div class="logo-omnidesk-main">OmniDesk</div>
+            <div class="slogan">with <span class="ai">AI</span> make the difference</div>
+            <p class="header-subtitle">
+                <span class="header-subtitle-main">Votre Solution IA pour une Réponse automatique aux clients</span><br>
+                <span class="header-subtitle-channels">E-mail, WhatsApp, Messenger et Chatbot</span>
+            </p>
+            <span class="pilot-badge">Programme Pilote - Jusqu'au 30 septembre</span>
+        </div>
+
+        <!-- Section 1: Calculateur ROI -->
+        <div class="section">
+            <a href="https://j-aime.fr" class="jaime-corner" target="_blank">j-<span class="ai">AI</span>me.fr</a>
+            <h2>📊 Calculez vous-même votre ROI personnalisé</h2>
+
+            <div class="roi-calculator">
+                <div class="calculator-grid three-cols">
+                    <div class="input-group">
+                        <label for="emails">Emails clients/semaine</label>
+                        <input type="number" id="emails" value="100" min="20" max="1000">
+                        <span class="input-helper">Estimation moyenne</span>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="time">Minutes par email</label>
+                        <input type="number" id="time" value="5" min="2" max="15">
+                        <span class="input-helper">Temps moyen de traitement</span>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="cost">Coût horaire chargé employé (€)</label>
+                        <input type="number" id="cost" value="25" min="15" max="50">
+                        <span class="input-helper">Charges comprises</span>
+                    </div>
+                </div>
+
+                <button class="calculate-button" onclick="recalculateROI()">Recalculer mon ROI</button>
+            </div>
+
+            <div class="roi-results" id="roiResults" style="display: none;">
+                <div class="results-grid">
+                    <div class="result-item">
+                        <div class="result-label">Temps économisé</div>
+                        <div class="result-value" id="timeSaved">7h/sem</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="result-label">Plan adapté</div>
+                        <div class="result-value plan" id="planRecommended">Professional</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="result-label">Économie nette/mois</div>
+                        <div class="result-value highlight" id="monthlySaving">2.100€</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="result-label">ROI</div>
+                        <div class="result-value" id="roiPercent">427%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+
+        <!-- Section Formulaire Brevo complet -->
+        <div class="section">
+            <a href="https://j-aime.fr" class="jaime-corner" target="_blank">j-<span class="ai">AI</span>me.fr</a>
+            <!-- Formulaire Brevo intégré -->
+            <div class="sib-form" style="text-align: center; background-color: transparent;">
+                <div id="sib-form-container" class="sib-form-container">
+                    <div id="error-message" class="sib-form-message-panel"
+                        style="font-size:16px; text-align:left; font-family:Helvetica, sans-serif; color:#661d1d; background-color:#ffeded; border-radius:3px; border-color:#ff4949;max-width:540px; display: none;">
+                        <div class="sib-form-message-panel__text sib-form-message-panel__text--center">
+                            <svg viewBox="0 0 512 512" class="sib-icon sib-notification__icon">
+                                <path
+                                    d="M256 40c118.621 0 216 96.075 216 216 0 119.291-96.61 216-216 216-119.244 0-216-96.562-216-216 0-119.203 96.602-216 216-216m0-32C119.043 8 8 119.083 8 256c0 136.997 111.043 248 248 248s248-111.003 248-248C504 119.083 392.957 8 256 8zm-11.49 120h22.979c6.823 0 12.274 5.682 11.99 12.5l-7 168c-.268 6.428-5.556 11.5-11.99 11.5h-8.979c-6.433 0-11.722-5.073-11.99-11.5l-7-168c-.283-6.818 5.167-12.5 11.99-12.5zM256 340c-15.464 0-28 12.536-28 28s12.536 28 28 28 28-12.536 28-28-12.536-28-28-28z" />
+                            </svg>
+                            <span class="sib-form-message-panel__inner-text">
+                                ❌ Une erreur technique est survenue
+                            </span>
+                        </div>
+                    </div>
+                    <div></div>
+                    <div id="success-message" class="sib-form-message-panel"
+                        style="font-size:16px; text-align:left; font-family:Helvetica, sans-serif; color:#085229; background-color:#e7faf0; border-radius:3px; border-color:#13ce66;max-width:540px; display: none;">
+                        <div class="sib-form-message-panel__text sib-form-message-panel__text--center">
+                            <svg viewBox="0 0 512 512" class="sib-icon sib-notification__icon">
+                                <path
+                                    d="M256 8C119.033 8 8 119.033 8 256s111.033 248 248 248 248-111.033 248-248S392.967 8 256 8zm0 464c-118.664 0-216-96.055-216-216 0-118.663 96.055-216 216-216 118.664 0 216 96.055 216 216 0 118.663-96.055 216-216 216zm141.63-274.961L217.15 376.071c-4.705 4.667-12.303 4.637-16.97-.068l-85.878-86.572c-4.667-4.705-4.637-12.303.068-16.97l8.52-8.451c4.705-4.667 12.303-4.637 16.97.068l68.976 69.533 163.441-162.13c4.705-4.667 12.303-4.637 16.97.068l8.451 8.52c4.668 4.705 4.637 12.303-.068 16.97z" />
+                            </svg>
+                            <span class="sib-form-message-panel__inner-text">
+                                🎉 Inscription réussie au Programme Pilote !
+                            </span>
+                        </div>
+                    </div>
+                    <div></div>
+                    <div id="sib-container" class="sib-container--large sib-container--vertical"
+                        style="text-align:center; background-color:rgba(255,255,255,1); max-width:540px; border-radius:3px; border-width:1px; border-color:#C0CCD9; border-style:solid; direction:ltr">
+                        <form id="sib-form" method="POST"
+                            action="https://c7d662f8.sibforms.com/serve/MUIFACR4vM8yQ2Cd211fu9zkZQ3JQ3349FZoZrhM1jLgSP-MzBs6-3KPLYuXwgJLMmrVHHDgW0OupyEHHA6DhlGlHzYQ9o2UO-nIdPCw99b2cErnSTE9I-6j9YNz5izjT9NDbs7OtBwRUnYL4BVgSQMCMp28FTYUxqrMKaomn5ENta3BTprJ1PbpGVwhmTa_mJKzTgiTvK_2TIs5"
+                            data-type="subscription">
+                            <div style="padding: 8px 0;">
+                                <div class="sib-form-block"
+                                    style="font-size:18px; text-align:left; font-weight:700; font-family:Helvetica, sans-serif; color:#3C4858; background-color:transparent; text-align:left">
+                                    <div class="sib-text-form-block">
+                                        <p>🎯 Vos priorités (1 minute)</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="padding: 8px 0;">
+                                <div class="sib-radiobutton-group sib-form-block" data-required="true">
+                                    <div class="form__entry entry_mcq">
+                                        <div class="form__label-row ">
+                                            <label class="entry__label"
+                                                style="font-weight: 700; text-align:left; font-size:16px; text-align:left; font-weight:700; font-family:Helvetica, sans-serif; color:#3c4858;"
+                                                for="DEFIS_COMMUNICATION_ACTUELS" data-required="*">Défis de
+                                                communication actuels</label>
+                                            <div>
+                                                <div class="entry__choice">
+                                                    <label>
+                                                        <input type="radio" name="DEFIS_COMMUNICATION_ACTUELS"
+                                                            class="input_replaced" value="1" required>
+                                                        <span class="radio-button"></span><span style="font-size:16px; text-align:left; font-family:Helvetica, sans-serif; color:#3C4858; background-color:transparent;">Temps de réponse trop long (>2h)</span>
+                                                    </label>
+                                                </div>
+                                                <div class="entry__choice">
+                                                    <label>
+                                                        <input type="radio" name="DEFIS_COMMUNICATION_ACTUELS"
+                                                            class="input_replaced" value="2" required>
+                                                        <span class="radio-button"></span><span style="font-size:16px; text-align:left; font-family:Helvetica, sans-serif; color:#3C4858; background-color:transparent;">Disponibilité limitée (nuits, weekends)</span>
+                                                    </label>
+                                                </div>
+                                                <div class="entry__choice">
+                                                    <label>
+                                                        <input type="radio" name="DEFIS_COMMUNICATION_ACTUELS"
+                                                            class="input_replaced" value="3" required>
+                                                        <span class="radio-button"></span><span style="font-size:16px; text-align:left; font-family:Helvetica, sans-serif; color:#3C4858; background-color:transparent;">Gestion multi-canaux complexe</span>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <label class="entry__error entry__error--primary"
+                                            style="font-size:16px; text-align:left; font-family:Helvetica, sans-serif; color:#661d1d; background-color:#ffeded; border-radius:3px; border-color:#ff4949;">
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="padding: 8px 0;">
+                                <div class="sib-radiobutton-group sib-form-block" data-required="true">
+                                    <div class="form__entry entry_mcq">
+                                        <div class="form__label-row ">
+                                            <label class="entry__label"
+                                                style="font-weight: 700; text-align:left; font-size:16px; text-align:left; font-weight:700; font-family:Helvetica, sans-serif; color:#3c4858;"
+                                                for="FONCTIONNALITES_PRIORITAIRES" data-required="*">Fonctionnalités
+                                                prioritaires</label>
+                                            <div>
+                                                <div class="entry__choice">
+                                                    <label>
+                                                        <input type="radio" name="FONCTIONNALITES_PRIORITAIRES"
+                                                            class="input_replaced" value="1" required>
+                                                        <span class="radio-button"></span><span style="font-size:16px; text-align:left; font-family:Helvetica, sans-serif; color:#3C4858; background-color:transparent;">Réponses automatiques 24/7</span>
+                                                    </label>
+                                                </div>
+                                                <div class="entry__choice">
+                                                    <label>
+                                                        <input type="radio" name="FONCTIONNALITES_PRIORITAIRES"
+                                                            class="input_replaced" value="2" required>
+                                                        <span class="radio-button"></span><span style="font-size:16px; text-align:left; font-family:Helvetica, sans-serif; color:#3C4858; background-color:transparent;">Support multilingue (10+ langues)</span>
+                                                    </label>
+                                                </div>
+                                                <div class="entry__choice">
+                                                    <label>
+                                                        <input type="radio" name="FONCTIONNALITES_PRIORITAIRES"
+                                                            class="input_replaced" value="3" required>
+                                                        <span class="radio-button"></span><span style="font-size:16px; text-align:left; font-family:Helvetica, sans-serif; color:#3C4858; background-color:transparent;">Intégration native MisterBooking</span>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <label class="entry__error entry__error--primary"
+                                            style="font-size:16px; text-align:left; font-family:Helvetica, sans-serif; color:#661d1d; background-color:#ffeded; border-radius:3px; border-color:#ff4949;">
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="padding: 8px 0;">
+                                <div class="sib-radiobutton-group sib-form-block" data-required="true">
+                                    <div class="form__entry entry_mcq">
+                                        <div class="form__label-row ">
+                                            <label class="entry__label"
+                                                style="font-weight: 700; text-align:left; font-size:16px; text-align:left; font-weight:700; font-family:Helvetica, sans-serif; color:#3c4858;"
+                                                for="OBJECTIFS_BUSINESS" data-required="*">Objectifs business</label>
+                                            <div>
+                                                <div class="entry__choice">
+                                                    <label>
+                                                        <input type="radio" name="OBJECTIFS_BUSINESS"
+                                                            class="input_replaced" value="1" required>
+                                                        <span class="radio-button"></span><span style="font-size:16px; text-align:left; font-family:Helvetica, sans-serif; color:#3C4858; background-color:transparent;">Augmenter le taux de conversion</span>
+                                                    </label>
+                                                </div>
+                                                <div class="entry__choice">
+                                                    <label>
+                                                        <input type="radio" name="OBJECTIFS_BUSINESS"
+                                                            class="input_replaced" value="2" required>
+                                                        <span class="radio-button"></span><span style="font-size:16px; text-align:left; font-family:Helvetica, sans-serif; color:#3C4858; background-color:transparent;">Réduire les coûts opérationnels</span>
+                                                    </label>
+                                                </div>
+                                                <div class="entry__choice">
+                                                    <label>
+                                                        <input type="radio" name="OBJECTIFS_BUSINESS"
+                                                            class="input_replaced" value="3" required>
+                                                        <span class="radio-button"></span><span style="font-size:16px; text-align:left; font-family:Helvetica, sans-serif; color:#3C4858; background-color:transparent;">Améliorer les avis clients</span>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <label class="entry__error entry__error--primary"
+                                            style="font-size:16px; text-align:left; font-family:Helvetica, sans-serif; color:#661d1d; background-color:#ffeded; border-radius:3px; border-color:#ff4949;">
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="padding: 8px 0;">
+                                <div class="sib-form-block sib-divider-form-block">
+                                    <div style="border: 0; border-bottom: 1px solid #E5EDF6"></div>
+                                </div>
+                            </div>
+
+                            <!-- Section 3: Offre Programme Pilote -->
+                            <div class="section">
+                                <a href="https://j-aime.fr" class="jaime-corner" target="_blank">j-<span
+                                        class="ai">AI</span>me.fr</a>
+                                <h2>🚀 Programme Pilote Exclusif</h2>
+
+                                <div class="pilot-offer">
+                                    <div class="offer-header">
+                                        <div class="offer-title">30 hôtels sélectionnés - Offre limitée</div>
+                                        <div class="offer-deadline">⏰ Valable jusqu'au 30 septembre 2024</div>
+                                    </div>
+
+                                    <div class="offer-features">
+                                        <div class="feature-card">
+                                            <div class="feature-icon">💰</div>
+                                            <div class="feature-title">3 mois gratuits</div>
+                                            <div class="feature-desc">Testez sans payer<br>Valeur : 567€</div>
+                                        </div>
+
+                                        <div class="feature-card">
+                                            <div class="feature-icon">🛠️</div>
+                                            <div class="feature-title">Installation offerte</div>
+                                            <div class="feature-desc">Configuration complète<br>Valeur : 500€</div>
+                                        </div>
+
+                                        <div class="feature-card">
+                                            <div class="feature-icon">🔓</div>
+                                            <div class="feature-title">Sans engagement</div>
+                                            <div class="feature-desc">Arrêt possible après 3 mois<br><strong>Sans aucun
+                                                    frais</strong></div>
+                                        </div>
+                                    </div>
+
+                                    <div class="info-box">
+                                        <div class="info-box-title">Comment ça fonctionne ?</div>
+                                        <div class="info-box-text">
+                                            Vous souscrivez un abonnement annuel MAIS vous pouvez l'annuler après 3 mois
+                                            sans frais.
+                                            Résultat : vous testez 3 mois gratuitement et décidez ensuite de continuer
+                                            ou d'arrêter (0€).
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="availability-bar">
+                                    <div class="availability-header">
+                                        <span class="availability-text">Places disponibles :</span>
+                                        <span class="availability-count">14 restantes sur 30</span>
+                                    </div>
+                                    <div class="progress-bar">
+                                        <div class="progress-fill"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="padding: 8px 0;">
+                                <div class="sib-form-block sib-divider-form-block">
+                                    <div style="border: 0; border-bottom: 1px solid #E5EDF6"></div>
+                                </div>
+                            </div>
+                            <div style="padding: 8px 0;">
+                                <div class="sib-form-block"
+                                    style="font-size:18px; text-align:left; font-weight:700; font-family:Helvetica, sans-serif; color:#3C4858; background-color:transparent; text-align:left">
+                                    <div class="sib-text-form-block">
+                                        <p>🖥️ Vos systèmes actuels</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="padding: 8px 0;">
+                                <div class="sib-select sib-form-block" data-required="true">
+                                    <div class="form__entry entry_block">
+                                        <div class="form__label-row ">
+                                            <label class="entry__label"
+                                                style="font-weight: 700; text-align:left; font-size:16px; text-align:left; font-weight:700; font-family:Helvetica, sans-serif; color:#3c4858;"
+                                                for="PMS_ACTUEL" data-required="*">Quel est votre PMS (Property
+                                                Management System) ?</label>
+                                            <div class="entry__field">
+                                                <select class="input" id="PMS_ACTUEL" name="PMS_ACTUEL"
+                                                    data-required="true">
+                                                    <option value="" disabled selected hidden>Select one</option>
+                                                    <option class="sib-menu__item" value="1">MisterBooking</option>
+                                                    <option class="sib-menu__item" value="2">Mews</option>
+                                                    <option class="sib-menu__item" value="3">Opera</option>
+                                                    <option class="sib-menu__item" value="4">Cloudbeds</option>
+                                                    <option class="sib-menu__item" value="5">Protel</option>
+                                                    <option class="sib-menu__item" value="6">Guestline</option>
+                                                    <option class="sib-menu__item" value="7">Apaleo</option>
+                                                    <option class="sib-menu__item" value="8">Thaïs PMS</option>
+                                                    <option class="sib-menu__item" value="9">RoomRaccoon</option>
+                                                    <option class="sib-menu__item" value="10">Asterio</option>
+                                                    <option class="sib-menu__item" value="11">Eviivo</option>
+                                                    <option class="sib-menu__item" value="12">Amadeus Hospitality
+                                                    </option>
+                                                    <option class="sib-menu__item" value="13">Stardekk Bookingplanner
+                                                    </option>
+                                                    <option class="sib-menu__item" value="14">Hotelinco</option>
+                                                    <option class="sib-menu__item" value="15">Elina</option>
+                                                    <option class="sib-menu__item" value="16">VIPS CloudPMS</option>
+                                                    <option class="sib-menu__item" value="17">Lightspeed</option>
+                                                    <option class="sib-menu__item" value="18">Planet</option>
+                                                    <option class="sib-menu__item" value="19">ResNexus</option>
+                                                    <option class="sib-menu__item" value="20">RMS Cloud</option>
+                                                    <option class="sib-menu__item" value="21">Aucun PMS</option>
+                                                    <option class="sib-menu__item" value="22">Autre</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <label class="entry__error entry__error--primary"
+                                            style="font-size:16px; text-align:left; font-family:Helvetica, sans-serif; color:#661d1d; background-color:#ffeded; border-radius:3px; border-color:#ff4949;">
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="padding: 8px 0;">
+                                <div class="sib-select sib-form-block">
+                                    <div class="form__entry entry_block">
+                                        <div class="form__label-row ">
+                                            <label class="entry__label"
+                                                style="font-weight: 700; text-align:left; font-size:16px; text-align:left; font-weight:700; font-family:Helvetica, sans-serif; color:#3c4858;"
+                                                for="BOOKING_ENGINE">Quel est votre Booking Engine ?</label>
+                                            <div class="entry__field">
+                                                <select class="input" id="BOOKING_ENGINE" name="BOOKING_ENGINE">
+                                                    <option value="" disabled selected hidden>Select one</option>
+                                                    <option class="sib-menu__item" value="1">MisterBooking</option>
+                                                    <option class="sib-menu__item" value="2">D-EDGE</option>
+                                                    <option class="sib-menu__item" value="3">SiteMinder</option>
+                                                    <option class="sib-menu__item" value="4">ReservIT</option>
+                                                    <option class="sib-menu__item" value="5">RoomCloud</option>
+                                                    <option class="sib-menu__item" value="6">Bookassist</option>
+                                                    <option class="sib-menu__item" value="7">Cloudbeds</option>
+                                                    <option class="sib-menu__item" value="8">RoomRaccoon</option>
+                                                    <option class="sib-menu__item" value="9">Eviivo</option>
+                                                    <option class="sib-menu__item" value="10">Amenitiz</option>
+                                                    <option class="sib-menu__item" value="11">Vertical Booking</option>
+                                                    <option class="sib-menu__item" value="12">Hotelchamp</option>
+                                                    <option class="sib-menu__item" value="13">Hostaway</option>
+                                                    <option class="sib-menu__item" value="14">ThinkReservations</option>
+                                                    <option class="sib-menu__item" value="15">HotelRunner</option>
+                                                    <option class="sib-menu__item" value="16">CodexEco</option>
+                                                    <option class="sib-menu__item" value="17">Hallisoft</option>
+                                                    <option class="sib-menu__item" value="18">Beds24</option>
+                                                    <option class="sib-menu__item" value="19">Frontdesk Anywhere
+                                                    </option>
+                                                    <option class="sib-menu__item" value="20">SynXis (Sabre)</option>
+                                                    <option class="sib-menu__item" value="21">Amadeus TravelClick
+                                                        iHotelier</option>
+                                                    <option class="sib-menu__item" value="22">Aucun Booking Engine
+                                                    </option>
+                                                    <option class="sib-menu__item" value="23">Autre</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <label class="entry__error entry__error--primary"
+                                            style="font-size:16px; text-align:left; font-family:Helvetica, sans-serif; color:#661d1d; background-color:#ffeded; border-radius:3px; border-color:#ff4949;">
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="padding: 8px 0;">
+                                <div class="sib-form-block sib-divider-form-block">
+                                    <div style="border: 0; border-bottom: 1px solid #E5EDF6"></div>
+                                </div>
+                            </div>
+                            <div style="padding: 8px 0;">
+                                <div class="sib-select sib-form-block">
+                                    <div class="form__entry entry_block">
+                                        <div class="form__label-row ">
+                                            <label class="entry__label"
+                                                style="font-weight: 700; text-align:left; font-size:16px; text-align:left; font-weight:700; font-family:Helvetica, sans-serif; color:#3c4858;"
+                                                for="CHANNEL_MANAGER">Utilisez-vous un Channel Manager ?</label>
+                                            <div class="entry__field">
+                                                <select class="input" id="CHANNEL_MANAGER" name="CHANNEL_MANAGER">
+                                                    <option value="" disabled selected hidden>Select one</option>
+                                                    <option class="sib-menu__item" value="1">Aucun Channel Manager
+                                                    </option>
+                                                    <option class="sib-menu__item" value="2">SiteMinder</option>
+                                                    <option class="sib-menu__item" value="3">Cloudbeds</option>
+                                                    <option class="sib-menu__item" value="4">D-EDGE</option>
+                                                    <option class="sib-menu__item" value="5">RoomRaccoon</option>
+                                                    <option class="sib-menu__item" value="6">Cubilis</option>
+                                                    <option class="sib-menu__item" value="7">Holidu</option>
+                                                    <option class="sib-menu__item" value="8">Lodgify</option>
+                                                    <option class="sib-menu__item" value="9">Amenitiz</option>
+                                                    <option class="sib-menu__item" value="10">Eviivo</option>
+                                                    <option class="sib-menu__item" value="11">Smoobu</option>
+                                                    <option class="sib-menu__item" value="12">Octorate</option>
+                                                    <option class="sib-menu__item" value="13">Avaibook</option>
+                                                    <option class="sib-menu__item" value="14">Hostfully</option>
+                                                    <option class="sib-menu__item" value="15">WuBook</option>
+                                                    <option class="sib-menu__item" value="16">Beds24</option>
+                                                    <option class="sib-menu__item" value="17">Elloha</option>
+                                                    <option class="sib-menu__item" value="18">BookLogic</option>
+                                                    <option class="sib-menu__item" value="19">Yieldplanet</option>
+                                                    <option class="sib-menu__item" value="20">HotelRunner</option>
+                                                    <option class="sib-menu__item" value="21">Autre</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <label class="entry__error entry__error--primary"
+                                            style="font-size:16px; text-align:left; font-family:Helvetica, sans-serif; color:#661d1d; background-color:#ffeded; border-radius:3px; border-color:#ff4949;">
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="padding: 8px 0;">
+                                <div class="sib-form-block"
+                                    style="font-size:32px; text-align:center; font-weight:700; font-family:Helvetica, sans-serif; color:#3C4858; background-color:transparent; text-align:center">
+                                    <p>Réservez votre place - Programme Pilote</p>
+                                </div>
+                            </div>
+                            <div style="padding: 8px 0;">
+                                <div class="sib-form-block"
+                                    style="font-size:16px; text-align:center; font-family:Helvetica, sans-serif; color:#3C4858; background-color:transparent; text-align:center">
+                                    <div class="sib-text-form-block">
+                                        <p>3 mois gratuits, sans engagement</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="padding: 8px 0;">
+                                <div class="sib-input sib-form-block">
+                                    <div class="form__entry entry_block">
+                                        <div class="form__label-row ">
+                                            <label class="entry__label"
+                                                style="font-weight: 700; text-align:left; font-size:16px; text-align:left; font-weight:700; font-family:Helvetica, sans-serif; color:#3c4858;"
+                                                for="EMAIL" data-required="*">EMAIL</label>
+                                            <div class="entry__field">
+                                                <input class="input " type="text" id="EMAIL" name="EMAIL"
+                                                    autocomplete="off" data-required="true" required />
+                                            </div>
+                                        </div>
+                                        <label class="entry__error entry__error--primary"
+                                            style="font-size:16px; text-align:left; font-family:Helvetica, sans-serif; color:#661d1d; background-color:#ffeded; border-radius:3px; border-color:#ff4949;">
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="padding: 8px 0;">
+                                <div class="sib-input sib-form-block">
+                                    <div class="form__entry entry_block">
+                                        <div class="form__label-row ">
+                                            <label class="entry__label"
+                                                style="font-weight: 700; text-align:left; font-size:16px; text-align:left; font-weight:700; font-family:Helvetica, sans-serif; color:#3c4858;"
+                                                for="PRENOM" data-required="*">PRENOM</label>
+                                            <div class="entry__field">
+                                                <input class="input " maxlength="200" type="text" id="PRENOM"
+                                                    name="PRENOM" autocomplete="off" data-required="true" required />
+                                            </div>
+                                        </div>
+                                        <label class="entry__error entry__error--primary"
+                                            style="font-size:16px; text-align:left; font-family:Helvetica, sans-serif; color:#661d1d; background-color:#ffeded; border-radius:3px; border-color:#ff4949;">
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="padding: 8px 0;">
+                                <div class="sib-input sib-form-block">
+                                    <div class="form__entry entry_block">
+                                        <div class="form__label-row ">
+                                            <label class="entry__label"
+                                                style="font-weight: 700; text-align:left; font-size:16px; text-align:left; font-weight:700; font-family:Helvetica, sans-serif; color:#3c4858;"
+                                                for="NOM" data-required="*">NOM</label>
+                                            <div class="entry__field">
+                                                <input class="input " maxlength="200" type="text" id="NOM" name="NOM"
+                                                    autocomplete="off" data-required="true" required />
+                                            </div>
+                                        </div>
+                                        <label class="entry__error entry__error--primary"
+                                            style="font-size:16px; text-align:left; font-family:Helvetica, sans-serif; color:#661d1d; background-color:#ffeded; border-radius:3px; border-color:#ff4949;">
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="padding: 8px 0;">
+                                <div class="sib-input sib-form-block">
+                                    <div class="form__entry entry_block">
+                                        <div class="form__label-row ">
+                                            <label class="entry__label"
+                                                style="font-weight: 700; text-align:left; font-size:16px; text-align:left; font-weight:700; font-family:Helvetica, sans-serif; color:#3c4858;"
+                                                for="TELEPHONE" data-required="*">TELEPHONE</label>
+                                            <div class="entry__field">
+                                                <input class="input " maxlength="200" type="text" id="TELEPHONE"
+                                                    name="TELEPHONE" autocomplete="off" data-required="true" required />
+                                            </div>
+                                        </div>
+                                        <label class="entry__error entry__error--primary"
+                                            style="font-size:16px; text-align:left; font-family:Helvetica, sans-serif; color:#661d1d; background-color:#ffeded; border-radius:3px; border-color:#ff4949;">
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="padding: 8px 0;">
+                                <div class="sib-input sib-form-block">
+                                    <div class="form__entry entry_block">
+                                        <div class="form__label-row ">
+                                            <label class="entry__label"
+                                                style="font-weight: 700; text-align:left; font-size:16px; text-align:left; font-weight:700; font-family:Helvetica, sans-serif; color:#3c4858;"
+                                                for="HOTEL_NAME" data-required="*">NOM HOTEL</label>
+                                            <div class="entry__field">
+                                                <input class="input " maxlength="200" type="text" id="HOTEL_NAME"
+                                                    name="HOTEL_NAME" autocomplete="off" data-required="true"
+                                                    required />
+                                            </div>
+                                        </div>
+                                        <label class="entry__error entry__error--primary"
+                                            style="font-size:16px; text-align:left; font-family:Helvetica, sans-serif; color:#661d1d; background-color:#ffeded; border-radius:3px; border-color:#ff4949;">
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="padding: 8px 0;">
+                                <div class="sib-input sib-form-block">
+                                    <div class="form__entry entry_block">
+                                        <div class="form__label-row ">
+                                            <label class="entry__label"
+                                                style="font-weight: 700; text-align:left; font-size:16px; text-align:left; font-weight:700; font-family:Helvetica, sans-serif; color:#3c4858;"
+                                                for="CODE_POSTAL" data-required="*">CODE_POSTAL</label>
+                                            <div class="entry__field">
+                                                <input maxlength="200" type="text" data-numeric="true" class="input " id="CODE_POSTAL"
+                                                    name="CODE_POSTAL" autocomplete="off" data-required="true" required />
+                                            </div>
+                                        </div>
+                                        <label class="entry__error entry__error--primary"
+                                            style="font-size:16px; text-align:left; font-family:Helvetica, sans-serif; color:#661d1d; background-color:#ffeded; border-radius:3px; border-color:#ff4949;">
+                                        </label>
+                                    </div>
+                                </div>
+                            <div style="padding: 8px 0;">
+                                <div class="sib-input sib-form-block">
+                                    <div class="form__entry entry_block">
+                                        <div class="form__label-row ">
+                                            <label class="entry__label"
+                                                style="font-weight: 700; text-align:left; font-size:16px; text-align:left; font-weight:700; font-family:Helvetica, sans-serif; color:#3c4858;"
+                                                for="VILLE" data-required="*">VILLE</label>
+                                            <div class="entry__field">
+                                                <input class="input " maxlength="200" type="text" id="VILLE"
+                                                    name="VILLE" autocomplete="off" data-required="true" required />
+                                            </div>
+                                        </div>
+                                        <label class="entry__error entry__error--primary"
+                                            style="font-size:16px; text-align:left; font-family:Helvetica, sans-serif; color:#661d1d; background-color:#ffeded; border-radius:3px; border-color:#ff4949;">
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="padding: 8px 0;">
+                                <div class="sib-select sib-form-block" data-required="true">
+                                    <div class="form__entry entry_block">
+                                        <div class="form__label-row ">
+                                            <label class="entry__label"
+                                                style="font-weight: 700; text-align:left; font-size:16px; text-align:left; font-weight:700; font-family:Helvetica, sans-serif; color:#3c4858;"
+                                                for="NOMBRE_CHAMBRES" data-required="*">NOMBRE DE CHAMBRES</label>
+                                            <div class="entry__field">
+                                                <select class="input" id="NOMBRE_CHAMBRES" name="NOMBRE_CHAMBRES"
+                                                    data-required="true">
+                                                    <option value="" disabled selected hidden>Select one</option>
+                                                    <option class="sib-menu__item" value="1">1-10</option>
+                                                    <option class="sib-menu__item" value="2">11-30</option>
+                                                    <option class="sib-menu__item" value="3">31-50</option>
+                                                    <option class="sib-menu__item" value="4">51-100</option>
+                                                    <option class="sib-menu__item" value="5">100+</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <label class="entry__error entry__error--primary"
+                                            style="font-size:16px; text-align:left; font-family:Helvetica, sans-serif; color:#661d1d; background-color:#ffeded; border-radius:3px; border-color:#ff4949;">
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="padding: 8px 0;">
+                                <div class="sib-select sib-form-block" data-required="true">
+                                    <div class="form__entry entry_block">
+                                        <div class="form__label-row ">
+                                            <label class="entry__label"
+                                                style="font-weight: 700; text-align:left; font-size:16px; text-align:left; font-weight:700; font-family:Helvetica, sans-serif; color:#3c4858;"
+                                                for="CONTACT_FONCTION" data-required="*">FONCTION</label>
+                                            <div class="entry__field">
+                                                <select class="input" id="CONTACT_FONCTION" name="CONTACT_FONCTION"
+                                                    data-required="true">
+                                                    <option value="" disabled selected hidden>Select one</option>
+                                                    <option class="sib-menu__item" value="1">Propriétaire</option>
+                                                    <option class="sib-menu__item" value="2">Directeur / Directrice
+                                                    </option>
+                                                    <option class="sib-menu__item" value="3">Responsable réception
+                                                    </option>
+                                                    <option class="sib-menu__item" value="4">Manager</option>
+                                                    <option class="sib-menu__item" value="5">Autre</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <label class="entry__error entry__error--primary"
+                                            style="font-size:16px; text-align:left; font-family:Helvetica, sans-serif; color:#661d1d; background-color:#ffeded; border-radius:3px; border-color:#ff4949;">
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="padding: 8px 0;">
+                                <div class="sib-form-block" style="text-align: center">
+                                    <button class="sib-form-block__button sib-form-block__button-with-loader"
+                                        style="font-size:16px; text-align:center; font-weight:700; font-family:Helvetica, sans-serif; color:#FFFFFF; background-color:#1af368; border-radius:3px; border-width:0px;"
+                                        form="sib-form" type="submit">
+                                        <svg class="icon clickable__icon progress-indicator__icon sib-hide-loader-icon"
+                                            viewBox="0 0 512 512" style="">
+                                            <path
+                                                d="M460.116 373.846l-20.823-12.022c-5.541-3.199-7.54-10.159-4.663-15.874 30.137-59.886 28.343-131.652-5.386-189.946-33.641-58.394-94.896-95.833-161.827-99.676C261.028 55.961 256 50.751 256 44.352V20.309c0-6.904 5.808-12.337 12.703-11.982 83.556 4.306 160.163 50.864 202.11 123.677 42.063 72.696 44.079 162.316 6.031 236.832-3.14 6.148-10.75 8.461-16.728 5.01z" />
+                                        </svg>
+                                        Je réserve ma place Pilote
+                                    </button>
+                                </div>
+                                <div class="cta-subtitle" style="text-align: center;">
+                                    <div style="font-size: 14px; color: #27ae60; font-weight: 600; margin-top: 8px;">
+                                        0€ pendant 3 mois • Aucun engagement
+                                    </div>
+                                    <div style="font-size: 11px; color: #7f8c8d; margin-top: 6px; line-height: 1.3;">
+                                        * Champs obligatoires - Vos données sont protégées conformément au RGPD<br>
+                                        Réponse sous 24h ouvrées
+                                    </div>
+                                </div>
+                            </div>
+                            <input type="text" name="email_address_check" value="" class="input--hidden">
+                            <input type="hidden" name="locale" value="en">
+                            <input type="hidden" name="html_type" value="simple">
+                            <input type="hidden" id="hiddenPms" name="pms" value="">
+                            <input type="hidden" id="hiddenBookingEngine" name="bookingEngine" value="">
+                            <input type="hidden" id="hiddenChannelManager" name="channelManager" value="">
+                            <input type="hidden" id="hiddenROI" name="estimatedROI" value="">
+                            <input type="hidden" id="UTM_SOURCE" name="UTM_SOURCE" value="">
+                            <input type="hidden" id="BREVO_CONTACT_ID" name="BREVO_CONTACT_ID" value="">
+                        </form>
+
+                        <!-- Message de confirmation (masqué par défaut) -->
+                        <div id="success-message" style="display: none; background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); border: 2px solid #27ae60; padding: 15px; border-radius: 8px; margin-top: 15px; text-align: center;">
+                            <div style="font-size: 18px; color: #27ae60; font-weight: 600; margin-bottom: 8px;">
+                                ✅ Merci pour votre inscription !
+                            </div>
+                            <div style="font-size: 14px; color: #2c3e50; margin-bottom: 10px;">
+                                Votre place dans le programme pilote est réservée.
+                            </div>
+                            <div style="font-size: 13px; color: #7f8c8d;">
+                                Notre équipe vous contactera sous 24h ouvrées pour programmer votre démonstration personnalisée.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Script de capture des paramètres UTM et Brevo Contact ID -->
+        <script>
+            (function() {
+                // Fonction pour extraire les paramètres de l'URL
+                function getUrlParameter(name) {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    return urlParams.get(name);
+                }
+
+                // Fonction pour remplir les champs cachés
+                function populateHiddenFields() {
+                    // Capture du paramètre utm_source
+                    const utmSource = getUrlParameter('utm_source');
+                    if (utmSource) {
+                        const utmSourceField = document.getElementById('UTM_SOURCE');
+                        if (utmSourceField) {
+                            utmSourceField.value = utmSource;
+                            console.log('UTM_SOURCE capturé:', utmSource);
+                        }
+                    }
+
+                    // Capture du paramètre utm_id (ID contact Brevo)
+                    const brevoContactId = getUrlParameter('utm_id');
+                    if (brevoContactId) {
+                        const brevoIdField = document.getElementById('BREVO_CONTACT_ID');
+                        if (brevoIdField) {
+                            brevoIdField.value = brevoContactId;
+                            console.log('BREVO_CONTACT_ID capturé:', brevoContactId);
+                        }
+                    }
+
+                    // Log pour debug - afficher tous les paramètres UTM détectés
+                    const allUtmParams = {
+                        utm_source: getUrlParameter('utm_source'),
+                        utm_medium: getUrlParameter('utm_medium'),
+                        utm_campaign: getUrlParameter('utm_campaign'),
+                        utm_content: getUrlParameter('utm_content'),
+                        utm_term: getUrlParameter('utm_term'),
+                        utm_id: getUrlParameter('utm_id')
+                    };
+
+                    const hasUtmParams = Object.values(allUtmParams).some(param => param !== null);
+                    if (hasUtmParams) {
+                        console.log('Paramètres UTM détectés:', allUtmParams);
+                    }
+                }
+
+                // Exécuter au chargement de la page
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', populateHiddenFields);
+                } else {
+                    populateHiddenFields();
+                }
+
+                // Également vérifier avant la soumission du formulaire
+                const form = document.getElementById('sib-form');
+                if (form) {
+                    form.addEventListener('submit', function() {
+                        // Re-vérifier les valeurs avant soumission
+                        populateHiddenFields();
+
+                        // Log des valeurs qui seront envoyées
+                        const utmSourceValue = document.getElementById('UTM_SOURCE')?.value || '';
+                        const brevoIdValue = document.getElementById('BREVO_CONTACT_ID')?.value || '';
+
+                        console.log('Soumission formulaire avec:', {
+                            UTM_SOURCE: utmSourceValue,
+                            BREVO_CONTACT_ID: brevoIdValue
+                        });
+                    });
+                }
+            })();
+        </script>
+
+        <!-- Footer -->
+        <div class="footer">
+            OmniDesk by j-AIme.fr • Compatible MisterBooking (et Mews, Opera, Cloudbeds et d'autres PMS très
+            prochainement)<br>
+            RGPD compliant • Support et Hébergement en France
+        </div>
+    </div>
+
+    <script src="js/main.js"></script>
+    <script src="js/tracking.js"></script>
+    <!-- Script Brevo -->
+    <script defer src="https://sibforms.com/forms/end-form/build/main.js"></script>
+</body>
+
+</html>
