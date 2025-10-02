@@ -1,10 +1,27 @@
 /**
- * OmniDesk Tracking Module - Système de tracking comportemental avancé
- * Intégration avec Brevo pour analyser le comportement des visiteurs
+ * OmniDesk Tracking Module v2.0 - Système de tracking comportemental avancé
+ * Intégration: Brevo + n8n + Supabase
+ * 
+ * Nouveautés v2.0:
+ * - Double tracking: Brevo (marketing) + Supabase (analytics)
+ * - Format optimisé pour dashboard Appsmith
+ * - Résilience améliorée avec retry automatique
+ * - Déduplication des événements
  */
 
 class OmniDeskTracker {
-    constructor() {
+    constructor(config = {}) {
+        // Configuration
+        this.config = {
+            n8nWebhook: config.n8nWebhook || 'https://n8n.j-aime.fr/webhook/omnidesk-tracking',
+            enableBrevo: config.enableBrevo !== false, // true par défaut
+            enableN8n: config.enableN8n !== false, // true par défaut
+            retryAttempts: config.retryAttempts || 3,
+            retryDelay: config.retryDelay || 2000,
+            ...config
+        };
+
+        // Session & État
         this.sessionId = this.generateSessionId();
         this.startTime = Date.now();
         this.userData = {};
@@ -20,8 +37,9 @@ class OmniDeskTracker {
         this.formStarted = false;
         this.identifiedUser = null;
 
-        // Backup storage pour les cas de problème réseau
+        // Queue avec déduplication
         this.eventQueue = JSON.parse(localStorage.getItem('omnidesk_events') || '[]');
+        this.sentEventIds = new Set(JSON.parse(localStorage.getItem('omnidesk_sent_ids') || '[]'));
 
         this.init();
     }
@@ -34,6 +52,7 @@ class OmniDeskTracker {
         this.trackPageView();
         this.startEngagementTracking();
         this.processEventQueue();
+        this.cleanupOldEvents();
     }
 
     /**
@@ -41,6 +60,13 @@ class OmniDeskTracker {
      */
     generateSessionId() {
         return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    }
+
+    /**
+     * Génère un ID unique pour chaque événement
+     */
+    generateEventId() {
+        return 'evt_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
     }
 
     /**
@@ -56,7 +82,7 @@ class OmniDeskTracker {
     getUtmParameters() {
         const urlParams = new URLSearchParams(window.location.search);
         return {
-            utm_source: urlParams.get('utm_source') || null,
+            utm_source: urlParams.get('utm_source') || 'direct',
             utm_medium: urlParams.get('utm_medium') || null,
             utm_campaign: urlParams.get('utm_campaign') || null,
             utm_content: urlParams.get('utm_content') || null,
@@ -67,64 +93,216 @@ class OmniDeskTracker {
     /**
      * Crée un événement de base avec métadonnées communes
      */
-    createBaseEvent(eventName) {
+    createBaseEvent(eventType) {
+        const utm = this.getUtmParameters();
+        
         return {
-            event: eventName,
-            timestamp: new Date().toISOString(),
-            session_id: this.sessionId,
+            // Format pour n8n/Supabase
+            event_id: this.generateEventId(),
+            email: this.identifiedUser,
+            event_type: eventType,
+            event_source: 'landing_page',
             page_url: window.location.href,
-            device_type: this.getDeviceType(),
-            utm_parameters: this.getUtmParameters(),
-            user_email: this.identifiedUser
+            utm_source: utm.utm_source,
+            utm_campaign: utm.utm_campaign,
+            utm_medium: utm.utm_medium,
+            metadata: {
+                session_id: this.sessionId,
+                device_type: this.getDeviceType(),
+                timestamp: new Date().toISOString(),
+                user_agent: navigator.userAgent,
+                referrer: document.referrer,
+                utm_content: utm.utm_content,
+                utm_term: utm.utm_term
+            }
         };
     }
 
     /**
-     * Envoie un événement à Brevo avec fallback localStorage
+     * Envoie un événement à Brevo ET n8n avec fallback
      */
     async sendEvent(eventData) {
+        const eventId = eventData.event_id;
+
+        // Déduplication: vérifier si déjà envoyé
+        if (this.sentEventIds.has(eventId)) {
+            console.log('⏭️ Event already sent, skipping:', eventId);
+            return;
+        }
+
+        const results = {
+            brevo: false,
+            n8n: false
+        };
+
+        // 1. Envoyer à Brevo (si activé)
+        if (this.config.enableBrevo) {
+            results.brevo = await this.sendToBrevo(eventData);
+        }
+
+        // 2. Envoyer à n8n/Supabase (si activé)
+        if (this.config.enableN8n) {
+            results.n8n = await this.sendToN8n(eventData);
+        }
+
+        // Si au moins un a réussi, marquer comme envoyé
+        if (results.brevo || results.n8n) {
+            this.markEventAsSent(eventId);
+            console.log('✅ Event tracked:', eventData.event_type, results);
+        } else {
+            // Les deux ont échoué, mettre en queue
+            this.queueEvent(eventData);
+            console.warn('⚠️ Event queued for retry:', eventData.event_type);
+        }
+    }
+
+    /**
+     * Envoie à Brevo
+     */
+    async sendToBrevo(eventData) {
         try {
-            // Vérifier si Brevo est chargé
             if (typeof window.Brevo === 'undefined') {
-                throw new Error('Brevo not loaded yet');
+                throw new Error('Brevo not loaded');
             }
 
-            // Envoyer à Brevo
-            window.Brevo.push(['track', eventData.event, eventData]);
+            // Format Brevo: utiliser le nom d'événement original
+            const brevoEvent = {
+                event: eventData.event_type,
+                timestamp: eventData.metadata.timestamp,
+                session_id: eventData.metadata.session_id,
+                device_type: eventData.metadata.device_type,
+                ...eventData.metadata
+            };
 
-            console.log('✅ Event tracked:', eventData.event, eventData);
+            window.Brevo.push(['track', brevoEvent.event, brevoEvent]);
+            return true;
 
         } catch (error) {
-            console.warn('⚠️ Failed to send event to Brevo, storing locally:', error);
-
-            // Sauvegarder dans localStorage
-            this.eventQueue.push(eventData);
-            localStorage.setItem('omnidesk_events', JSON.stringify(this.eventQueue));
+            console.warn('❌ Brevo tracking failed:', error.message);
+            return false;
         }
+    }
+
+    /**
+     * Envoie à n8n/Supabase avec retry
+     */
+    async sendToN8n(eventData, attempt = 1) {
+        try {
+            const response = await fetch(this.config.n8nWebhook, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(eventData)
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            return true;
+
+        } catch (error) {
+            console.warn(`❌ n8n tracking failed (attempt ${attempt}/${this.config.retryAttempts}):`, error.message);
+
+            // Retry automatique avec backoff exponentiel
+            if (attempt < this.config.retryAttempts) {
+                const delay = this.config.retryDelay * Math.pow(2, attempt - 1);
+                console.log(`🔄 Retrying in ${delay}ms...`);
+                
+                await new Promise(resolve => setTimeout(resolve, delay));
+                return this.sendToN8n(eventData, attempt + 1);
+            }
+
+            return false;
+        }
+    }
+
+    /**
+     * Met un événement en queue pour retry ultérieur
+     */
+    queueEvent(eventData) {
+        this.eventQueue.push({
+            ...eventData,
+            queued_at: Date.now()
+        });
+
+        // Garder max 100 événements en queue
+        if (this.eventQueue.length > 100) {
+            this.eventQueue = this.eventQueue.slice(-100);
+        }
+
+        localStorage.setItem('omnidesk_events', JSON.stringify(this.eventQueue));
+    }
+
+    /**
+     * Marque un événement comme envoyé
+     */
+    markEventAsSent(eventId) {
+        this.sentEventIds.add(eventId);
+        
+        // Garder seulement les 1000 derniers IDs
+        if (this.sentEventIds.size > 1000) {
+            const idsArray = Array.from(this.sentEventIds);
+            this.sentEventIds = new Set(idsArray.slice(-1000));
+        }
+
+        localStorage.setItem('omnidesk_sent_ids', JSON.stringify(Array.from(this.sentEventIds)));
     }
 
     /**
      * Traite la queue d'événements sauvegardés
      */
     async processEventQueue() {
-        if (this.eventQueue.length > 0 && typeof window.Brevo !== 'undefined') {
-            const eventsToProcess = [...this.eventQueue];
-            this.eventQueue = [];
+        if (this.eventQueue.length === 0) return;
+
+        console.log(`📦 Processing ${this.eventQueue.length} queued events...`);
+
+        const eventsToProcess = [...this.eventQueue];
+        this.eventQueue = [];
+
+        for (const event of eventsToProcess) {
+            // Ignorer les événements trop vieux (>24h)
+            if (Date.now() - event.queued_at > 24 * 60 * 60 * 1000) {
+                console.log('⏭️ Skipping old event:', event.event_type);
+                continue;
+            }
+
+            const success = await this.sendToN8n(event);
+            if (success) {
+                this.markEventAsSent(event.event_id);
+            } else {
+                // Re-queue si échec
+                this.eventQueue.push(event);
+            }
+
+            // Petit délai entre chaque event
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+
+        if (this.eventQueue.length > 0) {
+            localStorage.setItem('omnidesk_events', JSON.stringify(this.eventQueue));
+            console.log(`⚠️ ${this.eventQueue.length} events still in queue`);
+        } else {
             localStorage.removeItem('omnidesk_events');
+            console.log('✅ All queued events processed');
+        }
+    }
 
-            for (const event of eventsToProcess) {
-                try {
-                    window.Brevo.push(['track', event.event, event]);
-                    console.log('✅ Queued event processed:', event.event);
-                } catch (error) {
-                    console.warn('⚠️ Failed to process queued event:', error);
-                    this.eventQueue.push(event);
-                }
-            }
+    /**
+     * Nettoie les événements de plus de 7 jours
+     */
+    cleanupOldEvents() {
+        const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
+        
+        this.eventQueue = this.eventQueue.filter(event => 
+            event.queued_at > sevenDaysAgo
+        );
 
-            if (this.eventQueue.length > 0) {
-                localStorage.setItem('omnidesk_events', JSON.stringify(this.eventQueue));
-            }
+        if (this.eventQueue.length > 0) {
+            localStorage.setItem('omnidesk_events', JSON.stringify(this.eventQueue));
+        } else {
+            localStorage.removeItem('omnidesk_events');
         }
     }
 
@@ -132,29 +310,24 @@ class OmniDeskTracker {
      * Configuration des event listeners
      */
     setupEventListeners() {
-        // Calculateur ROI
         this.setupCalculatorTracking();
-
-        // Quiz priorités
         this.setupQuizTracking();
-
-        // Formulaire
         this.setupFormTracking();
-
-        // CTA
         this.setupCTATracking();
-
-        // Scroll et engagement
         this.setupScrollTracking();
 
-        // Retry queue processing when Brevo loads
-        document.addEventListener('DOMContentLoaded', () => {
-            const checkBrevo = setInterval(() => {
-                if (typeof window.Brevo !== 'undefined') {
-                    this.processEventQueue();
-                    clearInterval(checkBrevo);
-                }
-            }, 1000);
+        // Retry queue processing périodiquement
+        setInterval(() => {
+            if (this.eventQueue.length > 0) {
+                this.processEventQueue();
+            }
+        }, 60000); // Toutes les minutes
+
+        // Process queue when page becomes visible
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden && this.eventQueue.length > 0) {
+                this.processEventQueue();
+            }
         });
     }
 
@@ -162,11 +335,10 @@ class OmniDeskTracker {
      * Tracking de la vue de page initiale
      */
     trackPageView() {
-        const eventData = {
-            ...this.createBaseEvent('page_view'),
-            referrer: document.referrer,
-            user_agent: navigator.userAgent
-        };
+        const eventData = this.createBaseEvent('page_view');
+        eventData.metadata.referrer = document.referrer;
+        eventData.metadata.screen_resolution = `${window.screen.width}x${window.screen.height}`;
+        eventData.metadata.viewport_size = `${window.innerWidth}x${window.innerHeight}`;
 
         this.sendEvent(eventData);
     }
@@ -178,20 +350,17 @@ class OmniDeskTracker {
         const calculatorInputs = document.querySelectorAll('#emails, #time, #cost');
         const calculateButton = document.querySelector('.calculate-button');
 
-        // Démarrage interaction calculateur
         calculatorInputs.forEach(input => {
             input.addEventListener('focus', () => {
                 if (!this.calculatorTouched) {
                     this.calculatorTouched = true;
                     this.calculatorStartTime = Date.now();
 
-                    const eventData = {
-                        ...this.createBaseEvent('roi_calculator_started'),
-                        default_values: {
-                            emails_per_week: document.getElementById('emails').value,
-                            minutes_per_email: document.getElementById('time').value,
-                            hourly_cost: document.getElementById('cost').value
-                        }
+                    const eventData = this.createBaseEvent('roi_calculator_started');
+                    eventData.metadata.default_values = {
+                        emails_per_week: document.getElementById('emails')?.value || 0,
+                        minutes_per_email: document.getElementById('time')?.value || 0,
+                        hourly_cost: document.getElementById('cost')?.value || 0
                     };
 
                     this.sendEvent(eventData);
@@ -199,22 +368,19 @@ class OmniDeskTracker {
             });
         });
 
-        // Calcul du ROI
         if (calculateButton) {
             calculateButton.addEventListener('click', () => {
                 const timeSpent = this.calculatorStartTime ?
                     Math.round((Date.now() - this.calculatorStartTime) / 1000) : 0;
 
-                const eventData = {
-                    ...this.createBaseEvent('roi_calculator_completed'),
-                    inputs: {
-                        emails_per_week: parseInt(document.getElementById('emails').value) || 0,
-                        minutes_per_email: parseInt(document.getElementById('time').value) || 0,
-                        hourly_cost: parseInt(document.getElementById('cost').value) || 0
-                    },
-                    results: this.extractROIResults(),
-                    time_spent_seconds: timeSpent
+                const eventData = this.createBaseEvent('roi_calculator_completed');
+                eventData.metadata.inputs = {
+                    emails_per_week: parseInt(document.getElementById('emails')?.value) || 0,
+                    minutes_per_email: parseInt(document.getElementById('time')?.value) || 0,
+                    hourly_cost: parseInt(document.getElementById('cost')?.value) || 0
                 };
+                eventData.metadata.results = this.extractROIResults();
+                eventData.metadata.time_spent_seconds = timeSpent;
 
                 this.sendEvent(eventData);
             });
@@ -252,19 +418,15 @@ class OmniDeskTracker {
                         this.quizStartTime = Date.now();
                     }
 
-                    const questionNumber = index + 1;
-                    const eventData = {
-                        ...this.createBaseEvent('quiz_interaction'),
-                        question_number: questionNumber,
-                        question_name: input.name,
-                        selected_value: input.value,
-                        selected_text: this.getRadioButtonText(input),
-                        total_questions_answered: this.getAnsweredQuestionsCount()
-                    };
+                    const eventData = this.createBaseEvent('quiz_interaction');
+                    eventData.metadata.question_number = index + 1;
+                    eventData.metadata.question_name = input.name;
+                    eventData.metadata.selected_value = input.value;
+                    eventData.metadata.selected_text = this.getRadioButtonText(input);
+                    eventData.metadata.total_questions_answered = this.getAnsweredQuestionsCount();
 
                     this.sendEvent(eventData);
 
-                    // Vérifier si le quiz est complet
                     if (this.isQuizCompleted()) {
                         this.trackQuizCompletion();
                     }
@@ -273,9 +435,6 @@ class OmniDeskTracker {
         });
     }
 
-    /**
-     * Récupère le texte associé à un radio button
-     */
     getRadioButtonText(input) {
         const label = input.closest('label');
         if (label) {
@@ -285,9 +444,6 @@ class OmniDeskTracker {
         return '';
     }
 
-    /**
-     * Compte le nombre de questions répondues
-     */
     getAnsweredQuestionsCount() {
         const questionNames = ['DEFIS_COMMUNICATION_ACTUELS', 'FONCTIONNALITES_PRIORITAIRES', 'OBJECTIFS_BUSINESS'];
         return questionNames.filter(name =>
@@ -295,32 +451,21 @@ class OmniDeskTracker {
         ).length;
     }
 
-    /**
-     * Vérifie si le quiz est complet
-     */
     isQuizCompleted() {
         return this.getAnsweredQuestionsCount() === 3;
     }
 
-    /**
-     * Track completion du quiz
-     */
     trackQuizCompletion() {
         const timeSpent = this.quizStartTime ?
             Math.round((Date.now() - this.quizStartTime) / 1000) : 0;
 
-        const eventData = {
-            ...this.createBaseEvent('quiz_completed'),
-            selected_priorities: this.getAllQuizAnswers(),
-            completion_time_seconds: timeSpent
-        };
+        const eventData = this.createBaseEvent('quiz_completed');
+        eventData.metadata.selected_priorities = this.getAllQuizAnswers();
+        eventData.metadata.completion_time_seconds = timeSpent;
 
         this.sendEvent(eventData);
     }
 
-    /**
-     * Récupère toutes les réponses du quiz
-     */
     getAllQuizAnswers() {
         const answers = {};
         const questionNames = ['DEFIS_COMMUNICATION_ACTUELS', 'FONCTIONNALITES_PRIORITAIRES', 'OBJECTIFS_BUSINESS'];
@@ -348,43 +493,39 @@ class OmniDeskTracker {
         const formFields = form.querySelectorAll('input, select, textarea');
         let fieldOrder = 0;
 
-        // Tracking des interactions avec les champs
         formFields.forEach(field => {
-            // Focus sur un champ
             field.addEventListener('focus', () => {
                 if (!this.formStarted) {
                     this.formStarted = true;
+                    
+                    const eventData = this.createBaseEvent('form_start');
+                    eventData.metadata.time_to_start_seconds = Math.round((Date.now() - this.startTime) / 1000);
+                    this.sendEvent(eventData);
                 }
 
                 fieldOrder++;
 
-                const eventData = {
-                    ...this.createBaseEvent('form_field_interaction'),
-                    field_name: field.name || field.id,
-                    field_type: field.type,
-                    field_order: fieldOrder,
-                    completion_percentage: this.getFormCompletionPercentage()
-                };
+                const eventData = this.createBaseEvent('form_field_interaction');
+                eventData.metadata.field_name = field.name || field.id;
+                eventData.metadata.field_type = field.type;
+                eventData.metadata.field_order = fieldOrder;
+                eventData.metadata.completion_percentage = this.getFormCompletionPercentage();
 
                 this.sendEvent(eventData);
             });
 
-            // Progression du formulaire
             field.addEventListener('blur', () => {
                 if (field.value.trim() !== '') {
-                    const eventData = {
-                        ...this.createBaseEvent('form_progress'),
-                        field_name: field.name || field.id,
-                        completion_percentage: this.getFormCompletionPercentage(),
-                        filled_fields: this.getFilledFieldsCount(),
-                        total_fields: formFields.length
-                    };
+                    const eventData = this.createBaseEvent('form_progress');
+                    eventData.metadata.field_name = field.name || field.id;
+                    eventData.metadata.completion_percentage = this.getFormCompletionPercentage();
+                    eventData.metadata.filled_fields = this.getFilledFieldsCount();
+                    eventData.metadata.total_fields = formFields.length;
 
                     this.sendEvent(eventData);
                 }
             });
 
-            // Identification utilisateur par email
             if (field.name === 'EMAIL' || field.type === 'email') {
                 field.addEventListener('blur', () => {
                     if (this.isValidEmail(field.value)) {
@@ -394,36 +535,27 @@ class OmniDeskTracker {
             }
         });
 
-        // Soumission du formulaire
         form.addEventListener('submit', () => {
-            const eventData = {
-                ...this.createBaseEvent('form_submitted'),
-                completion_percentage: 100,
-                total_time_seconds: Math.round((Date.now() - this.startTime) / 1000),
-                source_context: this.getFormSourceContext()
-            };
+            const eventData = this.createBaseEvent('form_submit');
+            eventData.metadata.completion_percentage = 100;
+            eventData.metadata.total_time_seconds = Math.round((Date.now() - this.startTime) / 1000);
+            eventData.metadata.source_context = this.getFormSourceContext();
 
             this.sendEvent(eventData);
         });
 
-        // Abandon du formulaire (détection via visibilitychange)
         document.addEventListener('visibilitychange', () => {
             if (document.hidden && this.formStarted && this.getFormCompletionPercentage() < 100) {
-                const eventData = {
-                    ...this.createBaseEvent('form_abandoned'),
-                    completion_percentage: this.getFormCompletionPercentage(),
-                    last_field: this.getLastFilledField(),
-                    time_spent_seconds: Math.round((Date.now() - this.startTime) / 1000)
-                };
+                const eventData = this.createBaseEvent('form_abandoned');
+                eventData.metadata.completion_percentage = this.getFormCompletionPercentage();
+                eventData.metadata.last_field = this.getLastFilledField();
+                eventData.metadata.time_spent_seconds = Math.round((Date.now() - this.startTime) / 1000);
 
                 this.sendEvent(eventData);
             }
         });
     }
 
-    /**
-     * Calcule le pourcentage de completion du formulaire
-     */
     getFormCompletionPercentage() {
         const form = document.getElementById('sib-form');
         if (!form) return 0;
@@ -436,9 +568,6 @@ class OmniDeskTracker {
         return Math.round((filledRequiredFields.length / requiredFields.length) * 100);
     }
 
-    /**
-     * Compte les champs remplis
-     */
     getFilledFieldsCount() {
         const form = document.getElementById('sib-form');
         if (!form) return 0;
@@ -447,9 +576,6 @@ class OmniDeskTracker {
         return Array.from(fields).filter(field => field.value.trim() !== '').length;
     }
 
-    /**
-     * Détermine le contexte source du formulaire
-     */
     getFormSourceContext() {
         return {
             after_calculator: this.calculatorTouched,
@@ -458,9 +584,6 @@ class OmniDeskTracker {
         };
     }
 
-    /**
-     * Récupère le dernier champ rempli
-     */
     getLastFilledField() {
         const form = document.getElementById('sib-form');
         if (!form) return null;
@@ -478,39 +601,39 @@ class OmniDeskTracker {
         return lastFilled;
     }
 
-    /**
-     * Validation email
-     */
     isValidEmail(email) {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return emailRegex.test(email);
     }
 
-    /**
-     * Identifie l'utilisateur
-     */
     identifyUser(email) {
         if (this.identifiedUser !== email) {
+            const previousEmail = this.identifiedUser;
             this.identifiedUser = email;
 
             // Identifier dans Brevo
-            if (typeof window.Brevo !== 'undefined') {
+            if (this.config.enableBrevo && typeof window.Brevo !== 'undefined') {
                 window.Brevo.push(['identify', { email: email }]);
             }
 
-            const eventData = {
-                ...this.createBaseEvent('user_identified'),
-                email: email,
-                identification_context: this.getIdentificationContext()
-            };
+            const eventData = this.createBaseEvent('user_identified');
+            eventData.email = email;
+            eventData.metadata.identification_context = this.getIdentificationContext();
+            eventData.metadata.previous_email = previousEmail;
 
             this.sendEvent(eventData);
+
+            // Re-traiter la queue avec le nouvel email
+            if (this.eventQueue.length > 0) {
+                this.eventQueue = this.eventQueue.map(event => ({
+                    ...event,
+                    email: email
+                }));
+                localStorage.setItem('omnidesk_events', JSON.stringify(this.eventQueue));
+            }
         }
     }
 
-    /**
-     * Contexte d'identification
-     */
     getIdentificationContext() {
         return {
             time_to_identification: Math.round((Date.now() - this.startTime) / 1000),
@@ -526,45 +649,36 @@ class OmniDeskTracker {
      * CTA - Setup tracking
      */
     setupCTATracking() {
-        // Bouton principal du formulaire
         const mainCTA = document.querySelector('.sib-form-block__button');
 
         if (mainCTA) {
             mainCTA.addEventListener('click', () => {
-                const eventData = {
-                    ...this.createBaseEvent('cta_clicked'),
-                    cta_text: mainCTA.textContent.trim(),
-                    cta_type: 'form_submit',
-                    context: this.getCTAContext(),
-                    scroll_position: Math.round(window.scrollY),
-                    time_since_arrival: Math.round((Date.now() - this.startTime) / 1000)
-                };
+                const eventData = this.createBaseEvent('cta_clicked');
+                eventData.metadata.cta_text = mainCTA.textContent.trim();
+                eventData.metadata.cta_type = 'form_submit';
+                eventData.metadata.context = this.getCTAContext();
+                eventData.metadata.scroll_position = Math.round(window.scrollY);
+                eventData.metadata.time_since_arrival = Math.round((Date.now() - this.startTime) / 1000);
 
                 this.sendEvent(eventData);
             });
         }
 
-        // Bouton calculateur
         const calcButton = document.querySelector('.calculate-button');
         if (calcButton) {
             calcButton.addEventListener('click', () => {
-                const eventData = {
-                    ...this.createBaseEvent('cta_clicked'),
-                    cta_text: calcButton.textContent.trim(),
-                    cta_type: 'roi_calculator',
-                    context: this.getCTAContext(),
-                    scroll_position: Math.round(window.scrollY),
-                    time_since_arrival: Math.round((Date.now() - this.startTime) / 1000)
-                };
+                const eventData = this.createBaseEvent('cta_clicked');
+                eventData.metadata.cta_text = calcButton.textContent.trim();
+                eventData.metadata.cta_type = 'roi_calculator';
+                eventData.metadata.context = this.getCTAContext();
+                eventData.metadata.scroll_position = Math.round(window.scrollY);
+                eventData.metadata.time_since_arrival = Math.round((Date.now() - this.startTime) / 1000);
 
                 this.sendEvent(eventData);
             });
         }
     }
 
-    /**
-     * Contexte du CTA
-     */
     getCTAContext() {
         return {
             after_calculator: this.calculatorTouched,
@@ -578,27 +692,21 @@ class OmniDeskTracker {
      * ENGAGEMENT - Setup tracking
      */
     startEngagementTracking() {
-        // Tracking toutes les 30 secondes
         this.engagementTimer = setInterval(() => {
-            const eventData = {
-                ...this.createBaseEvent('page_engagement'),
-                total_time_seconds: Math.round((Date.now() - this.startTime) / 1000),
-                scroll_depth_percentage: this.scrollDepth,
-                sections_viewed: Array.from(this.sectionsViewed),
-                interactions: {
-                    calculator_touched: this.calculatorTouched,
-                    quiz_answers: this.getAnsweredQuestionsCount(),
-                    form_progress: this.getFormCompletionPercentage()
-                }
+            const eventData = this.createBaseEvent('page_engagement');
+            eventData.metadata.total_time_seconds = Math.round((Date.now() - this.startTime) / 1000);
+            eventData.metadata.scroll_depth_percentage = this.scrollDepth;
+            eventData.metadata.sections_viewed = Array.from(this.sectionsViewed);
+            eventData.metadata.interactions = {
+                calculator_touched: this.calculatorTouched,
+                quiz_answers: this.getAnsweredQuestionsCount(),
+                form_progress: this.getFormCompletionPercentage()
             };
 
             this.sendEvent(eventData);
-        }, 30000); // 30 secondes
+        }, 30000);
     }
 
-    /**
-     * Setup scroll tracking
-     */
     setupScrollTracking() {
         let ticking = false;
 
@@ -608,8 +716,6 @@ class OmniDeskTracker {
             const scrollPercent = Math.round((scrollTop / docHeight) * 100);
 
             this.scrollDepth = Math.max(this.scrollDepth, scrollPercent);
-
-            // Détecter les sections vues
             this.detectVisibleSections();
 
             ticking = false;
@@ -623,9 +729,6 @@ class OmniDeskTracker {
         });
     }
 
-    /**
-     * Détecte les sections visibles
-     */
     detectVisibleSections() {
         const sections = document.querySelectorAll('.section');
         const windowHeight = window.innerHeight;
@@ -639,20 +742,69 @@ class OmniDeskTracker {
     }
 
     /**
+     * Méthode publique pour envoyer des événements custom
+     */
+    track(eventType, customMetadata = {}) {
+        const eventData = this.createBaseEvent(eventType);
+        eventData.metadata = {
+            ...eventData.metadata,
+            ...customMetadata
+        };
+        
+        this.sendEvent(eventData);
+    }
+
+    /**
+     * Méthode publique pour obtenir les stats de session
+     */
+    getSessionStats() {
+        return {
+            session_id: this.sessionId,
+            duration_seconds: Math.round((Date.now() - this.startTime) / 1000),
+            identified_user: this.identifiedUser,
+            interactions: {
+                calculator_touched: this.calculatorTouched,
+                quiz_completed: this.isQuizCompleted(),
+                form_started: this.formStarted,
+                form_completion: this.getFormCompletionPercentage()
+            },
+            engagement: {
+                scroll_depth: this.scrollDepth,
+                sections_viewed: Array.from(this.sectionsViewed).length
+            },
+            queue_size: this.eventQueue.length
+        };
+    }
+
+    /**
      * Nettoyage à la fermeture
      */
     cleanup() {
         if (this.engagementTimer) {
             clearInterval(this.engagementTimer);
         }
+
+        // Dernière tentative d'envoi de la queue
+        if (this.eventQueue.length > 0) {
+            this.processEventQueue();
+        }
     }
 }
 
-// Initialisation automatique
+// Initialisation automatique avec configuration
 let omniDeskTracker = null;
 
 document.addEventListener('DOMContentLoaded', function() {
-    omniDeskTracker = new OmniDeskTracker();
+    // Configuration personnalisable
+    const trackerConfig = {
+        n8nWebhook: 'https://n8n.j-aime.fr/webhook/omnidesk-tracking',
+        enableBrevo: true,
+        enableN8n: true,
+        retryAttempts: 3,
+        retryDelay: 2000
+    };
+
+    omniDeskTracker = new OmniDeskTracker(trackerConfig);
 
     // Nettoyage avant fermeture
     window.addEventListener('beforeunload', () => {
@@ -660,9 +812,15 @@ document.addEventListener('DOMContentLoaded', function() {
             omniDeskTracker.cleanup();
         }
     });
+
+    // Exposer globalement pour debug
+    window.omniDeskTracker = omniDeskTracker;
+
+    console.log('📊 OmniDesk Tracker v2.0 initialized');
+    console.log('Session ID:', omniDeskTracker.sessionId);
 });
 
-// Export pour utilisation externe si nécessaire
+// Export pour utilisation externe
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = OmniDeskTracker;
 }
