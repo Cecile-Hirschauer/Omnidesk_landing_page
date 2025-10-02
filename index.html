@@ -715,29 +715,39 @@
                         }
                     }
 
-                    // Capture du paramètre utm_id (ID contact Brevo)
-                    const brevoContactId = getUrlParameter('utm_id');
+                    // Capture du BREVO_CONTACT_ID depuis utm_id, brevo_id OU contact_id
+                    const brevoContactId = getUrlParameter('utm_id') ||
+                                          getUrlParameter('brevo_id') ||
+                                          getUrlParameter('contact_id') ||
+                                          '';
+
                     if (brevoContactId) {
                         const brevoIdField = document.getElementById('BREVO_CONTACT_ID');
                         if (brevoIdField) {
                             brevoIdField.value = brevoContactId;
                             console.log('BREVO_CONTACT_ID capturé:', brevoContactId);
                         }
+                    } else {
+                        console.log('⚠️ Aucun BREVO_CONTACT_ID trouvé dans l\'URL');
                     }
 
-                    // Log pour debug - afficher tous les paramètres UTM détectés
-                    const allUtmParams = {
+                    // Log pour debug - afficher tous les paramètres détectés
+                    const allParams = {
                         utm_source: getUrlParameter('utm_source'),
                         utm_medium: getUrlParameter('utm_medium'),
                         utm_campaign: getUrlParameter('utm_campaign'),
                         utm_content: getUrlParameter('utm_content'),
                         utm_term: getUrlParameter('utm_term'),
-                        utm_id: getUrlParameter('utm_id')
+                        utm_id: getUrlParameter('utm_id'),
+                        brevo_id: getUrlParameter('brevo_id'),
+                        contact_id: getUrlParameter('contact_id')
                     };
 
-                    const hasUtmParams = Object.values(allUtmParams).some(param => param !== null);
-                    if (hasUtmParams) {
-                        console.log('Paramètres UTM détectés:', allUtmParams);
+                    const hasParams = Object.values(allParams).some(param => param !== null && param !== '');
+                    if (hasParams) {
+                        console.log('📊 Paramètres URL détectés:', allParams);
+                    } else {
+                        console.log('ℹ️ Aucun paramètre URL détecté');
                     }
                 }
 
