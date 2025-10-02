@@ -1,8 +1,9 @@
 // ============================================
-// OMNIDESK - MAIN.JS VERSION SIMPLIFIÉE
+// OMNIDESK - MAIN.JS CORRIGÉ
+// Envoi direct des données à n8n
 // ============================================
 
-// Configuration Brevo (inchangé)
+// Configuration Brevo
 window.REQUIRED_CODE_ERROR_MESSAGE = 'Please choose a country code';
 window.LOCALE = 'fr';
 window.EMAIL_INVALID_MESSAGE = window.SMS_INVALID_MESSAGE = "⚠️ Email invalide";
@@ -21,7 +22,7 @@ window.translation = {
 var AUTOHIDE = Boolean(0);
 
 // ============================================
-// CALCULATEUR ROI (inchangé)
+// CALCULATEUR ROI
 // ============================================
 function calculateROI() {
     const emailsPerWeek = parseInt(document.getElementById('emails').value) || 100;
@@ -77,108 +78,183 @@ function recalculateROI() {
 }
 
 // ============================================
-// GESTION FORMULAIRE - VERSION ULTRA-SIMPLIFIÉE
+// COLLECTE DES DONNÉES DU FORMULAIRE
 // ============================================
+function collectFormData(form) {
+    const formData = new FormData(form);
+    const formObject = {};
 
-document.addEventListener('DOMContentLoaded', function () {
-    calculateROI();
-
-    // Event listeners ROI
-    const roiInputs = ['emails', 'time', 'cost'];
-    roiInputs.forEach(inputId => {
-        const input = document.getElementById(inputId);
-        if (input) {
-            input.addEventListener('input', calculateROI);
-            input.addEventListener('change', calculateROI);
+    // Collecter tous les champs sauf les champs système
+    for (let [key, value] of formData.entries()) {
+        if (key !== 'email_address_check' && key !== 'locale' && key !== 'html_type') {
+            formObject[key] = value;
         }
-    });
-
-    initPostalCodeAutocomplete();
-
-    // ============================================
-    // INTERCEPTER SOUMISSION (pour n8n uniquement)
-    // ============================================
-
-    const sibForm = document.getElementById('sib-form');
-    let formAlreadySubmitted = false;
-
-    if (sibForm) {
-        sibForm.addEventListener('submit', function (e) {
-
-            // Éviter double soumission
-            if (formAlreadySubmitted) {
-                console.log('⚠️ Formulaire déjà soumis');
-                return;
-            }
-
-            console.log('📤 Formulaire en cours de soumission...');
-            formAlreadySubmitted = true;
-
-            // ✅ Collecter les données du formulaire
-            const formData = new FormData(sibForm);
-            const formObject = {};
-
-            for (let [key, value] of formData.entries()) {
-                if (key !== 'email_address_check' && key !== 'locale' && key !== 'html_type') {
-                    formObject[key] = value;
-                }
-            }
-
-            // Calcul ROI
-            const emailsPerWeek = parseInt(document.getElementById('emails').value) || 100;
-            const minutesPerEmail = parseInt(document.getElementById('time').value) || 5;
-            const hourlyCost = parseInt(document.getElementById('cost').value) || 25;
-            const emailsPerMonth = Math.round(emailsPerWeek * 4.33);
-            const hoursPerMonth = (emailsPerWeek * minutesPerEmail * 0.8 / 60) * 4.33;
-            const monthlySaving = Math.round(hoursPerMonth * hourlyCost);
-            let omniDeskPrice = emailsPerMonth < 200 ? 79 : emailsPerMonth < 600 ? 189 : 329;
-            const netSaving = monthlySaving - omniDeskPrice;
-            const roiPercent = omniDeskPrice > 0 ? Math.round((netSaving / omniDeskPrice) * 100) : 0;
-
-            // Enrichir
-            formObject.estimatedROI = roiPercent + '%';
-            formObject.economiesMensuelles = netSaving;
-            formObject.planSuggere = emailsPerMonth < 200 ? 'Starter' : emailsPerMonth < 600 ? 'Professional' : 'Enterprise';
-            formObject.emailsPerMonth = emailsPerMonth;
-            formObject.timestamp = new Date().toISOString();
-            formObject.source = 'landing_page_omnidesk';
-
-            // ============================================
-            // ENVOI À N8N EN ARRIÈRE-PLAN (après 2 sec)
-            // ============================================
-            setTimeout(() => {
-                fetch('https://n8n.j-aime.fr/webhook/omnidesk-form-pilote', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(formObject)
-                })
-                    .then(response => {
-                        if (response.ok) {
-                            console.log('✅ Données envoyées à n8n');
-                        } else {
-                            console.error('❌ Erreur n8n:', response.status);
-                            // Sauvegarde locale
-                            const failed = JSON.parse(localStorage.getItem('omnidesk_failed_submissions') || '[]');
-                            failed.push({ data: formObject, timestamp: new Date().toISOString() });
-                            localStorage.setItem('omnidesk_failed_submissions', JSON.stringify(failed));
-                        }
-                    })
-                    .catch(error => {
-                        console.error('❌ Erreur connexion n8n:', error);
-                        // Sauvegarde locale
-                        const failed = JSON.parse(localStorage.getItem('omnidesk_failed_submissions') || '[]');
-                        failed.push({ data: formObject, timestamp: new Date().toISOString() });
-                        localStorage.setItem('omnidesk_failed_submissions', JSON.stringify(failed));
-                    });
-            }, 2000); // Attendre 2 secondes après soumission Brevo
-
-            // ✅ AFFICHER LE MESSAGE DE SUCCÈS (après 2.5 sec)
-            setTimeout(() => {
-                showSuccessMessage();
-            }, 2500);
-        });
     }
-});
+
+    // Ajouter les données ROI
+    const emailsPerWeek = parseInt(document.getElementById('emails').value) || 100;
+    const minutesPerEmail = parseInt(document.getElementById('time').value) || 5;
+    const hourlyCost = parseInt(document.getElementById('cost').value) || 25;
+    const emailsPerMonth = Math.round(emailsPerWeek * 4.33);
+    const hoursPerMonth = (emailsPerWeek * minutesPerEmail * 0.8 / 60) * 4.33;
+    const monthlySaving = Math.round(hoursPerMonth * hourlyCost);
+    let omniDeskPrice = emailsPerMonth < 200 ? 79 : emailsPerMonth < 600 ? 189 : 329;
+    const netSaving = monthlySaving - omniDeskPrice;
+    const roiPercent = omniDeskPrice > 0 ? Math.round((netSaving / omniDeskPrice) * 100) : 0;
+
+    // Enrichir les données
+    formObject.estimatedROI = roiPercent + '%';
+    formObject.economiesMensuelles = netSaving;
+    formObject.planSuggere = emailsPerMonth < 200 ? 'Starter' : emailsPerMonth < 600 ? 'Professional' : 'Enterprise';
+    formObject.emailsPerMonth = emailsPerMonth;
+    formObject.timestamp = new Date().toISOString();
+    formObject.source = 'landing_page_omnidesk';
+
+    console.log('📦 Données collectées:', formObject);
+
+    return formObject;
+}
+
+// ============================================
+// ENVOI À N8N
+// ============================================
+async function sendToN8n(formData) {
+    const n8nUrl = 'https://n8n.j-aime.fr/webhook/omnidesk-lead-process_v3';
+
+    try {
+        console.log('📤 Envoi à n8n...', n8nUrl);
+
+        const response = await fetch(n8nUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        });
+
+        if (response.ok) {
+            console.log('✅ Données envoyées à n8n avec succès');
+            return { success: true };
+        } else {
+            console.error('❌ Erreur n8n:', response.status, await response.text());
+            return { success: false, error: 'HTTP ' + response.status };
+        }
+
+    } catch (error) {
+        console.error('❌ Erreur connexion n8n:', error);
+
+        // Sauvegarder localement en cas d'échec
+        const failed = JSON.parse(localStorage.getItem('omnidesk_failed_submissions') || '[]');
+        failed.push({
+            data: formData,
+            timestamp: new Date().toISOString(),
+            error: error.message
+        });
+        localStorage.setItem('omnidesk_failed_submissions', JSON.stringify(failed));
+
+        return { success: false, error: error.message };
+    }
+}
+
+// ============================================
+// ENVOI À BREVO (optionnel, après n8n)
+// ============================================
+async function sendToBrevo(form) {
+    try {
+        const formData = new FormData(form);
+
+        console.log('📤 Envoi à Brevo...');
+
+        const response = await fetch(form.action, {
+            method: 'POST',
+            body: formData
+        });
+
+        if (response.ok) {
+            console.log('✅ Données envoyées à Brevo');
+            return { success: true };
+        } else {
+            console.warn('⚠️ Erreur Brevo:', response.status);
+            return { success: false };
+        }
+
+    } catch (error) {
+        console.warn('⚠️ Erreur connexion Brevo:', error);
+        return { success: false };
+    }
+}
+
+// ============================================
+// GESTION DE LA SOUMISSION
+// ============================================
+let formSubmitting = false;
+
+async function handleFormSubmit(event) {
+    event.preventDefault(); // ⚠️ IMPORTANT : Empêcher la soumission par défaut
+
+    // Éviter double soumission
+    if (formSubmitting) {
+        console.log('⚠️ Soumission déjà en cours');
+        return;
+    }
+
+    formSubmitting = true;
+    const form = event.target;
+
+    console.log('🚀 Début de la soumission du formulaire');
+
+    // Désactiver le bouton
+    const submitButton = form.querySelector('button[type="submit"]');
+    if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<span>Envoi en cours...</span>';
+    }
+
+    try {
+        // 1. Collecter les données
+        const formData = collectFormData(form);
+
+        // 2. Envoyer à n8n (PRIORITAIRE)
+        const n8nResult = await sendToN8n(formData);
+
+        if (n8nResult.success) {
+            console.log('✅ n8n OK');
+        } else {
+            console.warn('⚠️ n8n KO mais on continue');
+        }
+
+        // 3. Envoyer à Brevo (optionnel, en arrière-plan)
+        sendToBrevo(form).then(result => {
+            if (result.success) {
+                console.log('✅ Brevo OK');
+            } else {
+                console.warn('⚠️ Brevo KO');
+            }
+        });
+
+        // 4. Afficher le message de succès
+        setTimeout(() => {
+            showSuccessMessage();
+        }, 1000);
+
+    } catch (error) {
+        console.error('❌ Erreur soumission:', error);
+
+        // Afficher un message d'erreur
+        const errorDiv = document.getElementById('error-message');
+        if (errorDiv) {
+            errorDiv.style.display = 'block';
+        }
+
+        // Réactiver le bouton
+        if (submitButton) {
+            submitButton.disabled = false;
+            submitButton.innerHTML = 'Je réserve ma place Pilote';
+        }
+
+        formSubmitting = false;
+    }
+}
 
 // ============================================
 // MESSAGE DE SUCCÈS
@@ -213,10 +289,12 @@ function showSuccessMessage() {
 
         console.log('✅ Message de succès affiché');
     }
+
+    formSubmitting = false;
 }
 
 // ============================================
-// RETRY AUTOMATIQUE DES SUBMISSIONS FAILED
+// RETRY AUTOMATIQUE
 // ============================================
 async function retryFailedSubmissions() {
     const failedSubmissions = JSON.parse(localStorage.getItem('omnidesk_failed_submissions') || '[]');
@@ -227,19 +305,9 @@ async function retryFailedSubmissions() {
         const remaining = [];
 
         for (const submission of failedSubmissions) {
-            try {
-                const response = await fetch('https://n8n.j-aime.fr/webhook/omnidesk-form-pilote', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(submission.data)
-                });
+            const result = await sendToN8n(submission.data);
 
-                if (response.ok) {
-                    console.log('✅ Retry succès');
-                } else {
-                    remaining.push(submission);
-                }
-            } catch (error) {
+            if (!result.success) {
                 remaining.push(submission);
             }
         }
@@ -253,10 +321,40 @@ async function retryFailedSubmissions() {
     }
 }
 
-document.addEventListener('DOMContentLoaded', retryFailedSubmissions);
+// ============================================
+// INITIALISATION
+// ============================================
+document.addEventListener('DOMContentLoaded', function () {
+    // ROI Calculator
+    calculateROI();
+
+    const roiInputs = ['emails', 'time', 'cost'];
+    roiInputs.forEach(inputId => {
+        const input = document.getElementById(inputId);
+        if (input) {
+            input.addEventListener('input', calculateROI);
+            input.addEventListener('change', calculateROI);
+        }
+    });
+
+    // Postal Code Autocomplete
+    initPostalCodeAutocomplete();
+
+    // ⚠️ INTERCEPTER LA SOUMISSION DU FORMULAIRE
+    const sibForm = document.getElementById('sib-form');
+    if (sibForm) {
+        sibForm.addEventListener('submit', handleFormSubmit);
+        console.log('✅ Handler de soumission installé');
+    } else {
+        console.error('❌ Formulaire #sib-form introuvable');
+    }
+
+    // Retry des soumissions échouées
+    retryFailedSubmissions();
+});
 
 // ============================================
-// AUTOCOMPLÉTION CODE POSTAL (inchangé)
+// AUTOCOMPLÉTION CODE POSTAL
 // ============================================
 async function fetchCitiesByPostalCode(postalCode) {
     try {
@@ -390,5 +488,6 @@ function debounce(func, wait) {
     };
 }
 
-// Fonctions de test (pour debug)
+// Fonctions de test
 window.testSuccessMessage = showSuccessMessage;
+window.testRetry = retryFailedSubmissions;
